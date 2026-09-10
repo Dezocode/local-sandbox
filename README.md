@@ -10,7 +10,7 @@ Native compilation, real-device execution, Apple provisioning, external local-ap
 
 ## Open it
 
-- Site: https://local-sandbox.candy-lyric-5390.chatgpt.site
+- Site: https://local-sandbox.ctyy4wd4c2.chatgpt.site
 - Native project: `ios/LocalSandbox.xcodeproj`
 - Visual guide: `public/downloads/Local-Sandbox-Setup-Guide.pdf`
 
