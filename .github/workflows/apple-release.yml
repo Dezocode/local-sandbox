@@ -1,0 +1,57 @@
+name: Package native release
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: Archive locally or upload a signed build to App Store Connect
+        required: true
+        default: archive
+        type: choice
+        options: [archive, upload]
+permissions:
+  contents: read
+jobs:
+  apple:
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-latest
+    environment: apple-release
+    env:
+      LS_APPLE_TEAM: ${{ vars.APPLE_TEAM_ID }}
+      LS_BUNDLE_ID: ${{ vars.APPLE_BUNDLE_ID }}
+      LS_ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      LS_ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      LS_STAGE: ${{ inputs.stage }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Materialize temporary Apple API key
+        env:
+          LS_ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          python3 - <<'PY'
+          import os,pathlib
+          key=os.environ['LS_ASC_KEY_P8']
+          if not key.startswith('-----BEGIN PRIVATE KEY-----'):raise SystemExit('Configure the App Store Connect API key secrets.')
+          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'LocalSandbox-AuthKey.p8'
+          path.write_text(key);path.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write('LS_ASC_KEY_PATH='+str(path)+'\n')
+          PY
+      - name: Run native regression tests
+        run: |
+          LS_SIMULATOR=$(xcrun simctl list devices available -j | python3 -c 'import json,sys;d=json.load(sys.stdin);a=[v["udid"] for k,vs in d["devices"].items() if "iOS-26" in k or "iOS-27" in k for v in vs if "iPhone" in v["name"]];print(a[0] if a else "")')
+          test -n "$LS_SIMULATOR"
+          python3 scripts/release/apple.py test --simulator "$LS_SIMULATOR"
+      - name: Archive or upload
+        run: python3 scripts/release/apple.py "$LS_STAGE" --team "$LS_APPLE_TEAM" --bundle-id "$LS_BUNDLE_ID" --build-number "$GITHUB_RUN_NUMBER"
+      - name: Remove signing key
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import pathlib,os
+          (pathlib.Path(os.environ['RUNNER_TEMP'])/'LocalSandbox-AuthKey.p8').unlink(missing_ok=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: Local-Sandbox-Apple-Release
+          path: release-output/
+          retention-days: 7

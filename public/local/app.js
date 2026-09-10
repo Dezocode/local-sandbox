@@ -18,3 +18,7 @@ el('restore').onchange=async e=>{try{const file=e.target.files[0];if(!file)retur
 el('test').onclick=()=>{if(!el('installed').checked)return error(Error('Save the Shortcut on your iPhone first, then confirm its exact name.'));location.href='shortcuts://run-shortcut?'+new URLSearchParams({name:el('shortcut').value,input:'text',text:'Return only: Local Sandbox round-trip works. Do not edit files.'})};
 let registration;el('update').onclick=async()=>{try{await registration?.update();el('offline').textContent='Update checked. Close and reopen the app to activate a downloaded shell.'}catch(e){error(e)}};
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js',{scope:'./'}).then(r=>{registration=r;el('offline').textContent='Offline shell registered. First download may still be completing.'}).catch(()=>{el('offline').textContent='Offline shell unavailable in this browser. Files remain encrypted locally.'});
+
+const displayMode=matchMedia('(display-mode: standalone)');
+function updateAppMode(){el('app-mode').textContent=(displayMode.matches||navigator.standalone===true)?'Running as a Home Screen app.':'Running in a browser. Use Safari Share → Add to Home Screen, then launch the saved icon.'}
+displayMode.addEventListener('change',updateAppMode);updateAppMode();

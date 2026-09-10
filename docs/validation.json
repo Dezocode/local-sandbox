@@ -1,7 +1,7 @@
 {
-  "date": "2026-09-10T19:01:24.219085+00:00",
+  "date": "2026-09-10T19:18:51.482854+00:00",
   "contractTests": {
-    "passed": 18,
+    "passed": 20,
     "failed": 0
   },
   "storageQueries": {
@@ -22,7 +22,7 @@
     "rendered": true,
     "visuallyInspected": "changed pages 23-26; existing template retained"
   },
-  "xcodeProjectStructure": "10 Swift app sources and one test source referenced; Info.plist parses; native build not performed",
+  "xcodeProjectStructure": "11 Swift app files and one native test source; uncompiled",
   "workerIntegration": "not completed: environment cancelled network approval while starting local workerd",
   "nativeCompilation": "not performed: Apple SDK and Xcode unavailable",
   "nativeDeviceTests": "not performed",
@@ -39,5 +39,8 @@
   "gitHubLiveSync": "not tested: user repository token not configured",
   "appShortcuts": "Missing adapter runs guarded by user-reported setup; no published provider installers bundled",
   "ios27": "explicit acceptance target; Apple SDK and physical device unavailable",
-  "localWebApp": "Crypto and backup schema tests passed; JS syntax valid; IndexedDB, service worker and iPhone installation not exercised in browser"
+  "localWebApp": "Crypto and backup schema tests passed; JS syntax valid; IndexedDB, service worker and iPhone installation not exercised in browser",
+  "buildNumber": 4,
+  "packageInstaller": "Catalog validation/order tests passed; real packages await exported Apple workflows and signing",
+  "publishingAutomation": "Python syntax checked; macOS commands, GitHub workflow and Docker deployment not executed"
 }

@@ -50,3 +50,9 @@ next-env.d.ts
 ios/**/xcuserdata/
 
 __pycache__/
+
+release-output/
+private-exports/
+*.p8
+*.p12
+*.mobileprovision

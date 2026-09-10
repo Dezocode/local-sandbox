@@ -1,0 +1,11 @@
+{$LOCAL_SANDBOX_DOMAIN} {
+    root * /srv
+    encode zstd gzip
+    @shortcuts path *.shortcut
+    header @shortcuts Content-Type application/octet-stream
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+    }
+    file_server
+}

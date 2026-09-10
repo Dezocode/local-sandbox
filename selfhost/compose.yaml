@@ -1,0 +1,17 @@
+services:
+  local-sandbox:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      LOCAL_SANDBOX_DOMAIN: ${LOCAL_SANDBOX_DOMAIN:?Set your own domain}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./site:/srv:ro
+      - caddy_data:/data
+      - caddy_config:/config
+volumes:
+  caddy_data:
+  caddy_config:

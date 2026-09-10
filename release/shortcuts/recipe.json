@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "release": "0.3.0",
+  "packages": [
+    {"id":"local","name":"Agent Step - Local","file":"Agent Step - Local.shortcut","requires":[]},
+    {"id":"chatgpt","name":"Agent Step - ChatGPT","file":"Agent Step - ChatGPT.shortcut","requires":[]},
+    {"id":"grok","name":"Agent Step - Grok","file":"Agent Step - Grok.shortcut","requires":[]},
+    {"id":"grokbot","name":"Agent Step - Grokbot","file":"Agent Step - Grokbot.shortcut","requires":[]},
+    {"id":"claude","name":"Agent Step - Claude","file":"Agent Step - Claude.shortcut","requires":[]},
+    {"id":"runner","name":"Local Sandbox","file":"Local Sandbox.shortcut","requires":["local"]}
+  ]
+}

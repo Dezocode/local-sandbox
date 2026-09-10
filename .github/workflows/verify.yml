@@ -15,7 +15,7 @@ jobs:
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec tsc --noEmit
-      - run: node --experimental-strip-types --test tests/contracts.test.ts tests/integrations.test.ts tests/vault.test.mjs
+      - run: node --experimental-strip-types --test tests/contracts.test.ts tests/integrations.test.ts tests/vault.test.mjs tests/packages.test.mjs
       - run: python3 tests/storage.test.py
       - run: python3 tests/worktree.test.py
   native:

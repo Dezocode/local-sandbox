@@ -34,3 +34,7 @@ Version 0.2 is an implementation preview. Apple SDKs, Xcode, real-device validat
 ## 0.3 local workspace update
 
 See [INSTALL-TODAY.md](docs/INSTALL-TODAY.md) for exact installation steps and remaining device gates. The independent `public/local` web app provides an encrypted local editor, session notebook, backup/restore and a scoped offline shell. It has its own vault password, not Sign in with Apple. The native source now prepares local protected files after Apple sign-in, supports device authentication, and retains optional selected-folder access. Missing provider Shortcuts are blocked until the user completes setup; no one-tap provider installers are claimed without genuine shared links.
+
+## 0.3 installation automation
+
+See [ROADMAP-AUTOMATION.md](docs/ROADMAP-AUTOMATION.md) for native installation, real Shortcut signing and catalog publishing, self-hosting, App Store Connect upload and remaining acceptance steps. The package installer is available at `/local/install.html` and in native Setup. No actual provider package is distributed until real exported workflows have been signed. The automation does not fabricate Apple approval.
