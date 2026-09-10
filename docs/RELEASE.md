@@ -54,3 +54,11 @@ The private website is updated in place; no new Site or empty database is substi
 GitHub live writes are untested without a user-entered repository token. Transport contract checks and a real local worktree patch exercise were performed separately. They are not evidence of GitHub account authorization. The patch importer reads back actual file changes and rejects conflicts, wrong branches, tampered hashes, and symlinks.
 
 No pre-signed third-party Shortcut packages or fabricated iCloud install links are shipped. Local Sandbox's own App Shortcuts are included in the native project. Third-party action availability, one-tap shared-link installation, Apple login, and iOS 27 execution require the installed signed app and the device.
+
+## 0.3 evidence and limits
+
+32 checks pass (18 Node contract/crypto checks, 6 SQL checks, 8 real temporary Git-worktree checks). TypeScript and the production web build pass. The PDF is 26 pages; added pages were rendered and inspected.
+
+New: standalone encrypted local web vault and editor, explicit session notebook, backup/restore, scoped service-worker shell, guarded missing-Shortcut entry points, repository navigation, remote status polling, native protected app-local workspace preparation, Face ID/passcode unlock and authenticated App Intents.
+
+Unverified: browser persistence/offline installation, Xcode compilation, Apple sign-in/device authentication, provider Shortcut installation and responses, live user GitHub synchronization, native iOS 27 behavior. No Apple passkey web implementation, automatic complete repository mirror, Cursor Origin login or default Siri replacement is claimed. See INSTALL-TODAY.md for exact setup and constraints.

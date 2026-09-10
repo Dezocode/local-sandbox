@@ -5,31 +5,45 @@ import CryptoKit
 final class SandboxStore {
     static let shared = SandboxStore()
     private var root: URL?
+    private var scoped = false
     private let manager = FileManager.default
     private let encoder = JSONEncoder()
     private init() { encoder.outputFormatting = [.prettyPrinted, .sortedKeys] }
     var connected: Bool { root != nil }
-    var folderName: String { root?.lastPathComponent ?? "No folder selected" }
+    var folderName: String { root == nil ? "Not prepared" : scoped ? (root?.lastPathComponent ?? "Selected folder") : "On this iPhone" }
     func connect(_ url: URL) throws {
         guard url.startAccessingSecurityScopedResource() else { throw SandboxError.blocked("FOLDER_PERMISSION_REQUIRED") }
         defer { url.stopAccessingSecurityScopedResource() }
         let bookmark = try url.bookmarkData(options: .minimalBookmark, includingResourceValuesForKeys: nil, relativeTo: nil)
         UserDefaults.standard.set(bookmark, forKey: "sandboxBookmark")
+        scoped = true
         root = url.standardizedFileURL
         for name in ["config", "workspace", "state", "logs", "output"] {
             try manager.createDirectory(at: url.appendingPathComponent(name), withIntermediateDirectories: true)
         }
     }
     func restore() throws {
-        guard let data = UserDefaults.standard.data(forKey: "sandboxBookmark") else { return }
+        guard Keychain.get("appleUser") != nil else { return }
+        guard let data = UserDefaults.standard.data(forKey: "sandboxBookmark") else { try useLocal(); return }
         var stale = false
         let url = try URL(resolvingBookmarkData: data, options: [], relativeTo: nil, bookmarkDataIsStale: &stale)
         try connect(url)
     }
+    func useLocal() throws {
+        guard let user = Keychain.get("appleUser") else { throw SandboxError.blocked("Sign in with Apple first.") }
+        let base = try manager.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        let folder = base.appendingPathComponent("LocalSandbox").appendingPathComponent(Self.hash(user))
+        for name in ["config", "workspace", "state", "logs", "output"] {
+            try manager.createDirectory(at: folder.appendingPathComponent(name), withIntermediateDirectories: true, attributes: [.protectionKey: FileProtectionType.complete])
+        }
+        root = folder; scoped = false
+        UserDefaults.standard.removeObject(forKey: "sandboxBookmark")
+    }
     func disconnect() { root = nil; UserDefaults.standard.removeObject(forKey: "sandboxBookmark") }
     private func access<T>(_ operation: (URL) throws -> T) throws -> T {
-        guard let root, root.startAccessingSecurityScopedResource() else { throw SandboxError.blocked("SELECT_FOLDER_IN_SETTINGS") }
-        defer { root.stopAccessingSecurityScopedResource() }
+        guard Keychain.get("appleUser") != nil, let root else { throw SandboxError.blocked("Sign in and prepare your workspace first.") }
+        if scoped && !root.startAccessingSecurityScopedResource() { throw SandboxError.blocked("FOLDER_PERMISSION_REQUIRED") }
+        defer { if scoped { root.stopAccessingSecurityScopedResource() } }
         return try operation(root)
     }
     private func resolve(_ path: SandboxPath, under root: URL) throws -> URL {
@@ -68,6 +82,7 @@ final class SandboxStore {
                         guard Self.hash(actual) == expectedSHA256 else { throw SandboxError.conflict("FILE_CHANGED_REREAD_REQUIRED") }
                     }
                     try content.write(to: coordinated, atomically: true, encoding: .utf8)
+                    if !self.scoped { try self.manager.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: coordinated.path) }
                     guard try String(contentsOf: coordinated, encoding: .utf8) == content else { throw SandboxError.conflict("READBACK_FAILED") }
                 }
             }

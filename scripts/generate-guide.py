@@ -39,7 +39,7 @@ def start(title,sub,pills,sidebar):
     for label,text in sidebar:
         y-=para(label.upper(),44,y,108,ParagraphStyle('side-label',parent=small,fontName='GuideBold',fontSize=8,spaceAfter=4))+9
         y-=para(text,44,y,108,small)+25
-    c.setStrokeColor(LINE);c.line(43,44,569,44);c.setFillColor(MUTED);c.setFont('Guide',7);c.drawString(43,29,'LOCAL SANDBOX  /  v0.2 IMPLEMENTATION PREVIEW  /  10 SEP 2026');c.drawRightString(569,29,f'{page:02d}')
+    c.setStrokeColor(LINE);c.line(43,44,569,44);c.setFillColor(MUTED);c.setFont('Guide',7);c.drawString(43,29,'LOCAL SANDBOX  /  v0.3 IMPLEMENTATION PREVIEW  /  10 SEP 2026');c.drawRightString(569,29,f'{page:02d}')
     return 629
 
 def block(n,title,text,y):
@@ -61,7 +61,7 @@ side=[('Build order','1. Folder\n2. Dispatcher\n3. Provider\n4. Runner\n5. Recei
 y=start('Local Sandbox','A visual setup guide for Oracle-guided iOS tools, bounded local reasoning, and verifiable execution.',['Oracle guidance','Shortcuts executor','Scoped file access','Xcode companion'],side)
 y=block(1,'Use one executor and interchangeable reasoning', 'Oracle prepares a compact task. A micro-model or frontier provider proposes one tool call. A deterministic dispatcher validates and executes it. Readback evidence becomes a receipt. Siri is a voice entry and Apple-owned orchestrator.',y)
 y=block(2,'Open the private observation dashboard','https://local-sandbox.ctyy4wd4c2.chatgpt.site - use your ChatGPT session. The online sandbox saves text files, policy, progress, and receipts. It is a separate source workspace, not a live mount of iCloud Drive.',y)
-y=block(3,'Choose the iPhone path','For Shortcuts-only use, configure the recipes on the following pages. For native use, open ios/LocalSandbox.xcodeproj in Xcode, choose your developer team, enable Sign in with Apple, build to your device, then select your LocalSandbox folder.',y)
+y=block(3,'Choose the iPhone path','For Shortcuts-only use, configure the recipes on the following pages. For native use, open ios/LocalSandbox.xcodeproj in Xcode, choose your developer team, enable Sign in with Apple, build to your device, then sign in to prepare an on-device workspace. Selecting an iCloud folder is optional.',y)
 y=note('What is ready, and what is still required','The web application and native source are prepared. The native app has not been compiled or run on an Apple device in this Linux environment. Signed shortcuts, Apple provisioning, device acceptance, external app Shortcuts actions, real GitHub account sync, and App Review remain release gates.',y)
 
 for idx,recipe in enumerate(data['shortcuts']):
@@ -109,13 +109,13 @@ for n,(title,text) in enumerate([
 ('Publish or import','Commit sandbox to GitHub creates a new commit based on the compared branch. Import GitHub version uses the sandbox file revision. Refresh and compare again after any conflict.'),
 ('Use a real Git worktree','Pull the published branch on its computer, or export a worktree patch before publishing. Run scripts/worktree-sync.py with the patch and --worktree absolute-path. Review the dry run, then add --apply. The branch, base commit, origin, paths, and hashes must match.')],1):y=block(n,title,text,y)
 
-y=start('Updates / move to your next iPhone','Keep configuration and evidence while changing devices or installing a newer build.',['Version 0.2','Preserve data','Detect again','Signed updates'],[('Device today','iPhone 14 Pro / iOS 27.0 is user-reported. Apple Intelligence is not assumed available.'),('New device','Sign in with Apple, select the same iCloud folder, test adapters again.'),('Release gate','No real iOS 27 execution or App Store approval is claimed.')])
+y=start('Updates / move to your next iPhone','Keep configuration and evidence while changing devices or installing a newer build.',['Version 0.3','Preserve data','Detect again','Signed updates'],[('Device today','iPhone 14 Pro / iOS 27.0 is user-reported. Apple Intelligence is not assumed available.'),('New device','Sign in with Apple, select the same iCloud folder, test adapters again.'),('Release gate','No real iOS 27 execution or App Store approval is claimed.')])
 for n,(title,text) in enumerate([
 ('Apple capability menu','The native app reads SystemLanguageModel availability when a provider is opened. An unavailable provider shows a native alert with its reason. Locally remains selectable through Shortcuts.'),
 ('Transfer the workspace','On the new iPhone, log in with Apple and select the same iCloud LocalSandbox folder. Existing policy and files are preserved. App adapter names restore from config/app-adapters.json; tests must be repeated on the new device.'),
 ('Update the dashboard device report','In native Settings export the device report. Save the JSON and import it in web Settings. The web labels it as an imported snapshot; it does not infer hardware from a browser user agent.'),
 ('Update the app safely','Install signed Xcode, TestFlight, or App Store updates. There is no runtime download-and-execute app patcher. Site releases preserve the database and compare-and-swap file revisions. public/updates.json identifies this version.'),
-('Update Shortcut stacks','A validated iCloud share link opens Add Shortcut in one tap. Without a published signed link, Create in Shortcuts opens the editor. Never mark the adapter tested merely because a link opened. Version and test the changed stack before replacing it.')],1):y=block(n,title,text,y)
+('Update Shortcut stacks','A validated iCloud share link opens Add Shortcut in one tap. Without a published signed link, Open blank editor opens an empty editor and installs nothing. Never mark the adapter tested merely because a link opened. Version and test the changed stack before replacing it.')],1):y=block(n,title,text,y)
 
 y=start('Release / every aspect is a goal','The complete goal map is also available in the dashboard as an exportable checklist.',['Web','Device','Apple','Distribution'],[('Distribution','No App Store submission is claimed. Apple signing, store metadata, screenshots, privacy labels, support details, and App Review are required.'),('Repository','Source is downloadable. A publication script is included. GitHub publication is reported only after a successful remote push.')])
 for n,a in enumerate(data['aspects'],1):
@@ -123,6 +123,22 @@ for n,a in enumerate(data['aspects'],1):
     p=Paragraph(escape(text),body);_,h=p.wrap(343,1000)
     if y-h-48<65:y=start('Release goals / continued','Preserve the same execution contract across every provider.',['Track','Test','Approve','Release'],[('Readiness','Implemented web features and prepared native source are different evidence levels.'),('Do not skip','Real device checks and Apple account configuration.')])
     y=block(n,a[0],text,y)
+
+y=start('On device / private workspace','A separate local web workspace with an encrypted editor and session notebook.',['Local storage','Password unlock','Offline shell','Export backup'],[('Open','Site / local / index.html. This vault is independent of the online dashboard.'),('Identity','A vault password is not Apple sign-in, a passkey, or Face ID.'),('Device testing','Offline Home Screen behavior has not been tested on an iPhone here.')])
+for n,(title,text) in enumerate([
+('Create the vault','Open On-device workspace from the dashboard. Choose at least 12 characters. Files and transferred messages are encrypted before browser storage. No file content or password is sent to the dashboard server.'),
+('Save to Home Screen','In Safari use Share, Add to Home Screen, and Open as Web App where offered. Open once online to download the shell. The native Xcode app is a separate installation.'),
+('Edit and record sessions','Use Code to create and save text files. Oracle session records prompts and returned text you explicitly transfer. It cannot read the private conversation history in your provider apps.'),
+('Back up before moving devices','Settings exports an encrypted backup. Restore with the same vault password. Clearing website data or losing the password can lose access. There is no password recovery.'),
+('Own the web app','Host public/local on your own HTTPS origin. Export and restore the encrypted backup when changing origins. The local app needs no model API or dashboard backend.')],1):y=block(n,title,text,y)
+
+y=start('Repair / missing Shortcut','A saved name is a dependency, not an installed workflow.',['Create','Save exact name','Test on phone','Then run'],[('Observed failure','The user saw: Could not find Agent Step - Local.'),('Root cause','The old run link targeted a name that had not been installed.'),('One tap','Requires a real shared Shortcut link. No fabricated installer is bundled.')])
+for n,(title,text) in enumerate([
+('Prepare native files','After Apple sign-in the native source prepares a protected local workspace. Settings can switch to a selected Files or iCloud folder. Existing folders are not copied or deleted by switching.'),
+('Find the app actions','Installing the native app exposes its declared App Shortcuts: Prepare Workspace, Begin Oracle Task, Apply Reviewed Action, Run Bounded Task and Open Local Sandbox. Device registration is still untested.'),
+('Build the provider adapter','Save Agent Step - Local in Shortcuts using the text action actually exposed by your installed Locally app. Pass Shortcut Input into it and Stop and Output the result. If no action exists, use manual transfer.'),
+('Validate before running','Confirm the exact saved name and perform the harmless text test. Record success only after receiving the response. The web cannot inspect installed Shortcuts, and opening a blank editor does not count.'),
+('Publish a real installer','Use the tested Shortcut sharing flow to obtain an iCloud link or Apple-validated export. Add that link in Settings. Apple presents installation and permission prompts on each phone.')],1):y=block(n,title,text,y)
 
 y=start('Sources / implementation notes','Primary documentation checked 10 September 2026. Source sections are named for direct verification.',['Apple','OpenAI','Reference guide','Traceable'],[('Reference','User-supplied iOS_ChatGPT_Local_Agent_Setup_Guide.pdf, pp. 1-5. Its structure and bounded loop are retained; no model availability claims were assumed.'),('SDK baseline','The project targets documented iOS 26 APIs. Later system features must be qualified on the actual device.')])
 sources=[

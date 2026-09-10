@@ -30,3 +30,7 @@ Use pnpm and the existing lockfile. `pnpm exec tsc --noEmit`, Node contract test
 ## Current evidence
 
 Version 0.2 is an implementation preview. Apple SDKs, Xcode, real-device validation, vendor Shortcut action availability, GitHub live-account writes, and App Store submission have not been completed in this environment. iOS 26+ is the deployment target; iOS 27.0 is explicitly in the device acceptance matrix. See `docs/RELEASE.md` and the visual PDF for exact gates.
+
+## 0.3 local workspace update
+
+See [INSTALL-TODAY.md](docs/INSTALL-TODAY.md) for exact installation steps and remaining device gates. The independent `public/local` web app provides an encrypted local editor, session notebook, backup/restore and a scoped offline shell. It has its own vault password, not Sign in with Apple. The native source now prepares local protected files after Apple sign-in, supports device authentication, and retains optional selected-folder access. Missing provider Shortcuts are blocked until the user completes setup; no one-tap provider installers are claimed without genuine shared links.

@@ -1,7 +1,7 @@
 {
-  "date": "2026-09-10T18:36:11.723054+00:00",
+  "date": "2026-09-10T19:01:24.219085+00:00",
   "contractTests": {
-    "passed": 14,
+    "passed": 18,
     "failed": 0
   },
   "storageQueries": {
@@ -18,11 +18,11 @@
   "webBuild": "passed",
   "typecheck": "passed",
   "pdf": {
-    "pages": 24,
+    "pages": 26,
     "rendered": true,
-    "visuallyInspected": true
+    "visuallyInspected": "changed pages 23-26; existing template retained"
   },
-  "xcodeProjectStructure": "47 references resolve; plist files parse; 9 Swift source files present",
+  "xcodeProjectStructure": "10 Swift app sources and one test source referenced; Info.plist parses; native build not performed",
   "workerIntegration": "not completed: environment cancelled network approval while starting local workerd",
   "nativeCompilation": "not performed: Apple SDK and Xcode unavailable",
   "nativeDeviceTests": "not performed",
@@ -30,13 +30,14 @@
   "appleSignIn": "not tested",
   "githubPublication": "not performed: target repository returned 404; repository-creation tool and authenticated CLI unavailable",
   "appStore": "not submitted",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "worktreeTests": {
     "passed": 8,
     "failed": 0,
     "environment": "real temporary Git repository; offline"
   },
   "gitHubLiveSync": "not tested: user repository token not configured",
-  "appShortcuts": "native actions implemented; installation and third-party app round-trip untested",
-  "ios27": "explicit acceptance target; Apple SDK and physical device unavailable"
+  "appShortcuts": "Missing adapter runs guarded by user-reported setup; no published provider installers bundled",
+  "ios27": "explicit acceptance target; Apple SDK and physical device unavailable",
+  "localWebApp": "Crypto and backup schema tests passed; JS syntax valid; IndexedDB, service worker and iPhone installation not exercised in browser"
 }

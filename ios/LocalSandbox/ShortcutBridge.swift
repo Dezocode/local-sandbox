@@ -72,6 +72,7 @@ struct ShortcutSession: Codable {
         guard !goal.isEmpty,goal.count<=2000,let provider=AppProvider(rawValue:policy.provider) else {throw SandboxError.invalid("Enter a task up to 2,000 characters.")}
         if let reason=provider.unavailableReason {throw SandboxError.blocked(reason)}
         guard !provider.usesCloud || policy.cloudAllowed else {throw SandboxError.blocked("Authorize cloud app handoffs in Settings first.")}
+        guard provider == .apple || AdapterSettings.get(provider).tested else {throw SandboxError.blocked("This provider Shortcut has not passed setup. Save it in Shortcuts and complete the read-only round-trip in Settings first.")}
         let snapshot=DeviceSnapshot.read();if let reason=snapshot.stopReason(policy:policy,initialBattery:snapshot.battery){throw SandboxError.blocked(reason)}
         let session=ShortcutSession(id:UUID().uuidString,goal:goal,policy:policy,started:Date(),initialBattery:snapshot.battery)
         try store.save(session,path:"state/shortcut-session.json")

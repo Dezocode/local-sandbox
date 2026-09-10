@@ -7,6 +7,7 @@ struct RunSandboxIntent: AppIntent {
     static let openAppWhenRun = true
     @Parameter(title: "Goal") var goal: String
     @MainActor func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        try await LocalAccess.authenticate()
         try SandboxStore.shared.restore()
         guard let data=UserDefaults.standard.data(forKey:"policy") else {throw SandboxError.blocked("Save authorization in Local Sandbox first.")}
         let policy=try JSONDecoder().decode(ResourcePolicy.self,from:data).validated()
@@ -23,6 +24,7 @@ struct PlanOneStepIntent: AppIntent {
     @Parameter(title: "State",default: "No actions executed.") var state:String
     @Parameter(title: "Last result",default: "None") var latest:String
     @MainActor func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        try await LocalAccess.authenticate()
         let policy:ResourcePolicy
         if let data=UserDefaults.standard.data(forKey:"policy"){policy=try JSONDecoder().decode(ResourcePolicy.self,from:data).validated()}else{throw SandboxError.blocked("Save authorization in the app first.")}
         let snapshot=DeviceSnapshot.read()
@@ -52,6 +54,7 @@ struct BeginOracleTaskIntent: AppIntent {
     static let openAppWhenRun=true
     @Parameter(title:"Goal") var goal:String
     @MainActor func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        try await LocalAccess.authenticate()
         try SandboxStore.shared.restore()
         guard let data=UserDefaults.standard.data(forKey:"policy") else{throw SandboxError.blocked("Save authorization in Local Sandbox first.")}
         let policy=try JSONDecoder().decode(ResourcePolicy.self,from:data).validated()
@@ -65,6 +68,7 @@ struct ApplyReviewedActionIntent: AppIntent {
     static let openAppWhenRun=true
     @Parameter(title:"Response") var response:String
     @MainActor func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        try await LocalAccess.authenticate()
         try SandboxStore.shared.restore()
         let output=try await ShortcutCoordinator.shared.accept(response)
         let phase=ShortcutCoordinator.shared.current()?.phase ?? "blocked"
@@ -76,6 +80,7 @@ struct PrepareWorkspaceIntent: AppIntent {
     static let title:LocalizedStringResource="Prepare Workspace"
     static let openAppWhenRun=true
     @MainActor func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        try await LocalAccess.authenticate()
         try SandboxStore.shared.restore()
         guard SandboxStore.shared.connected else{throw SandboxError.blocked("Choose your iCloud folder in Local Sandbox Settings first.")}
         let model=AppModel();try model.prepare()
