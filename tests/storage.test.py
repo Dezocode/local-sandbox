@@ -31,8 +31,7 @@ execute('INSERT OR IGNORE INTO receipts','user-a','receipt-1','original','2026-0
 execute('INSERT OR IGNORE INTO receipts','user-a','receipt-1','forged','2026-09-10T01:00:00Z')
 assert execute('SELECT payload FROM receipts WHERE user_id=? AND id=?','user-a','receipt-1').fetchone()['payload']=='original'
 checks.append('Receipt IDs cannot overwrite prior evidence')
-for _ in range(30):assert execute('INSERT INTO usage','user-a','2026-09-10T01').fetchone() is not None
-assert execute('INSERT INTO usage','user-a','2026-09-10T01').fetchone() is None
-checks.append('Hourly cloud quota caps at 30 calls')
+assert 'api.openai.com' not in sources
+checks.append('Retired model API endpoint cannot spend API credits')
 print(json.dumps({'passed':len(checks),'checks':checks},indent=2))
 (root/'docs/storage-validation.json').write_text(json.dumps({'passed':len(checks),'checks':checks},indent=2)+'\n')

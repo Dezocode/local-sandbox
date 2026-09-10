@@ -10,4 +10,15 @@
 | [OpenAI function calling](https://developers.openai.com/api/docs/guides/function-calling) | Function calling | Strict tool schemas propose actions; the app executes and validates |
 | User-supplied iOS_ChatGPT_Local_Agent_Setup_Guide.pdf | Pages 1–5 | Original build order, narrow tool set, capsule, retry budgets, Siri entry, and visual document structure |
 
-The supplied guide's particular model names were not treated as evidence of current availability. A model ID must be chosen from the actual API project. The app makes no vendor benchmark claims.
+The supplied guide's particular model names were not treated as evidence of current availability. Provider app actions must be confirmed against the version installed on the phone; app subscription access is not a model API credential. The app makes no vendor benchmark claims.
+
+Version 0.2 primary sources checked 10 September 2026:
+
+| Source | Section | Use |
+|---|---|---|
+| [Apple create Shortcut URL](https://support.apple.com/guide/shortcuts/open-create-and-run-a-shortcut-apda283236d7/ios) | Create a new shortcut using a URL scheme | `shortcuts://create-shortcut` opens an editor; it does not install a finished stack |
+| [Apple Intelligence requirements](https://support.apple.com/en-us/121115) | Device requirements; Turn on Apple Intelligence | Hardware eligibility and enabled/downloaded models are separate from OS version |
+| [GitHub references](https://docs.github.com/en/rest/git/refs) | Create a reference; Update a reference | New work branches and non-force conflict handling |
+| [GitHub tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) | Creating a fine-grained personal access token | Repository-scoped authorization |
+
+Grokbot is a user-configured app adapter, not an asserted vendor-specific protocol. Locally, LM Link, Grok, Claude, and ChatGPT action names remain device-confirmed rather than invented. This environment could not directly inspect the installed iPhone apps. iOS 27.0 is the user's reported version; native testing remains pending, not inferred from documentation availability.

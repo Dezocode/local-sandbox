@@ -18,7 +18,8 @@ final class AppModel: ObservableObject {
     @Published var receipts: [RunReceipt] = []
     @Published var checkpoint: RunCheckpoint?
     init() {
-        if let saved=UserDefaults.standard.data(forKey:"policy"),let parsed=try? JSONDecoder().decode(ResourcePolicy.self,from:saved),let valid=try? parsed.validated(){policy=valid}
+        if let saved=UserDefaults.standard.data(forKey:"policy"),var parsed=try? JSONDecoder().decode(ResourcePolicy.self,from:saved){if parsed.provider=="openai"{parsed.provider="chatgpt"};if let valid=try? parsed.validated(){policy=valid}}
+        Keychain.delete("openaiKey");Keychain.delete("openaiModel")
         userID=Keychain.get("appleUser") ?? ""
         do {try SandboxStore.shared.restore();refresh()} catch {self.error=error.localizedDescription}
         if !userID.isEmpty {
@@ -32,7 +33,7 @@ final class AppModel: ObservableObject {
         let store=SandboxStore.shared
         let existing=try store.list("config")
         if !existing.contains("config/oracle.md"){try store.write(SandboxPath("config/oracle.md"),content:nativeOraclePolicy,createOnly:true)}
-        try store.save(policy,path:"config/policy.json")
+        if existing.contains("config/policy.json"){var restored=try store.load(ResourcePolicy.self,path:"config/policy.json");if restored.provider=="openai"{restored.provider="chatgpt"};policy=try restored.validated();UserDefaults.standard.set(try JSONEncoder().encode(policy),forKey:"policy")}else{try store.save(policy,path:"config/policy.json")}
         if !(try store.list("workspace")).contains("workspace/test.txt"){try store.write(SandboxPath("workspace/test.txt"),content:"Status: pending",createOnly:true)}
     }
     func refresh() {
@@ -51,48 +52,69 @@ final class AppModel: ObservableObject {
         guard let checkpoint else{return}
         do {try SandboxStore.shared.save(checkpoint,path:"output/reviewed-\(checkpoint.runID).json");try SandboxStore.shared.save(RunCheckpoint(runID:checkpoint.runID,goal:checkpoint.goal,nextStep:checkpoint.nextStep,capsule:"User reviewed the interrupted run. No action replayed.",lastResult:checkpoint.lastResult,phase:"blocked"),path:"state/active.json");self.checkpoint=nil}catch{self.error=error.localizedDescription}
     }
-    func deleteProfile(){Keychain.delete("appleUser");Keychain.delete("openaiKey");Keychain.delete("openaiModel");userID="";SandboxStore.shared.disconnect();UserDefaults.standard.removeObject(forKey:"policy");policy=ResourcePolicy();refresh()}
+    func deleteProfile(){Keychain.delete("appleUser");Keychain.delete("openaiKey");Keychain.delete("openaiModel");Keychain.delete("githubToken");for provider in AppProvider.allCases{UserDefaults.standard.removeObject(forKey:"adapter.\(provider.rawValue)")};UserDefaults.standard.removeObject(forKey:"githubTarget");userID="";SandboxStore.shared.disconnect();UserDefaults.standard.removeObject(forKey:"policy");policy=ResourcePolicy();refresh()}
 }
 
 @main
 struct LocalSandboxApp: App {
     @StateObject private var model=AppModel()
-    var body: some Scene {WindowGroup {RootView().environmentObject(model).preferredColorScheme(.dark).tint(Color(red:0.75,green:0.93,blue:0.52))}}
+    @Environment(\.scenePhase) private var phase
+    var body: some Scene {WindowGroup {RootView().environmentObject(model).tint(.primary).onChange(of:phase){_,value in if value == .active{model.refresh()}}}}
 }
 struct RootView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @EnvironmentObject private var model:AppModel
     var body:some View {
-        TabView {
-            ControlView().tabItem{Label("Control",systemImage:"square.stack.3d.up")}
-            FilesView().tabItem{Label("Sandbox",systemImage:"folder")}
-            ActivityView().tabItem{Label("Activity",systemImage:"waveform.path")}
-            SettingsView().tabItem{Label("Settings",systemImage:"slider.horizontal.3")}
-        }.alert("Local Sandbox",isPresented:Binding(get:{!model.error.isEmpty},set:{if !$0{model.error=""}})){Button("OK"){model.error=""}}message:{Text(model.error)}
+        Group {if model.userID.isEmpty {WelcomeView()} else {
+            TabView {
+                ControlView().tabItem{Label("Inbox",systemImage:"tray")}
+                FilesView().tabItem{Label("Sandbox",systemImage:"folder")}
+                ActivityView().tabItem{Label("Activity",systemImage:"waveform.path")}
+                SettingsView().tabItem{Label("Settings",systemImage:"slider.horizontal.3")}
+            }.transition(.opacity)
+        }}.animation(reduceMotion ? nil:.easeInOut(duration:0.4),value:model.userID.isEmpty).alert("Local Sandbox",isPresented:Binding(get:{!model.error.isEmpty},set:{if !$0{model.error=""}})){Button("OK"){model.error=""}}message:{Text(model.error)}
     }
+}
+struct AppleLoginButton:View {
+    @EnvironmentObject private var model:AppModel
+    @Environment(\.colorScheme) private var scheme
+    @State private var state=""
+    var body:some View {SignInWithAppleButton(.signIn){request in state=UUID().uuidString;request.state=state;request.requestedScopes=[]}onCompletion:{result in switch result {case .success(let auth):if let credential=auth.credential as? ASAuthorizationAppleIDCredential,credential.state==state{do{try Keychain.set(credential.user,for:"appleUser");model.userID=credential.user}catch{model.error=error.localizedDescription}}else{model.error="Apple credential could not be verified."};case .failure(let error):model.error=error.localizedDescription}}.signInWithAppleButtonStyle(scheme == .dark ? .white:.black).frame(height:50).clipShape(Capsule())}
+}
+struct WelcomeView:View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var glow=false
+    var body:some View {VStack(spacing:23){Spacer();Image("Brand").resizable().scaledToFit().frame(width:145,height:145).shadow(color:.gray.opacity(glow ? 0.35:0.08),radius:glow ? 45:16).scaleEffect(glow ? 1.03:1);Text("Local Sandbox").font(.system(size:37,weight:.semibold));Text("Your apps. One workspace.").font(.title3).foregroundStyle(.secondary);Spacer();AppleLoginButton().frame(maxWidth:340);Text("Next, choose your iCloud folder and connect your app Shortcuts. App subscriptions stay in their own apps.").font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth:330);Spacer().frame(height:30)}.padding(30).frame(maxWidth:.infinity).background(Color(uiColor:.systemBackground)).onAppear{if !reduceMotion{withAnimation(.easeInOut(duration:2.8).repeatForever(autoreverses:true)){glow=true}}}}
 }
 struct ControlView:View {
     @EnvironmentObject private var model:AppModel
     @State private var goal=""
-    @State private var dashboard=false
+    var body:some View {NavigationStack {ScrollView {VStack(alignment:.leading,spacing:28){
+        LazyVGrid(columns:[GridItem(.flexible()),GridItem(.flexible())],spacing:14){
+            NavigationLink{ProvidersView()}label:{inboxCard("All Agents",count:AppProvider.allCases.count,icon:"paperplane",color:.orange)}
+            NavigationLink{SetupView()}label:{inboxCard("Needs Attention",count:model.connected ? 1:2,icon:"bell.badge",color:.orange)}
+            NavigationLink{ActivityView()}label:{inboxCard("Working",count:model.running ? 1:0,icon:"circle.dotted",color:.blue)}
+            NavigationLink{ActivityView()}label:{inboxCard("In Review",count:model.receipts.count,icon:"checkmark.circle",color:.purple)}
+        }.buttonStyle(.plain)
+        Text("Workspaces").font(.title3).foregroundStyle(.secondary)
+        VStack(spacing:0){NavigationLink{FilesView()}label:{workspaceRow(model.connected ? model.folderName:"Connect iCloud folder",icon:"folder",count:model.files.count)};Divider().padding(.leading,45);NavigationLink{GitHubSettingsView()}label:{workspaceRow("GitHub worktrees",icon:"arrow.triangle.branch",count:nil)};Divider().padding(.leading,45);NavigationLink{SettingsView()}label:{workspaceRow("Add workspace",icon:"folder.badge.plus",count:nil)}}.buttonStyle(.plain)
+        if let session=ShortcutCoordinator.shared.current(),["awaiting_response","applying"].contains(session.phase){NavigationLink{OracleView()}label:{Label("Continue app handoff · step \(session.step)",systemImage:"arrow.uturn.backward").padding().frame(maxWidth:.infinity,alignment:.leading).background(.thinMaterial,in:RoundedRectangle(cornerRadius:20))}}
+        if let checkpoint=model.checkpoint {VStack(alignment:.leading,spacing:12){Label("Interrupted native run",systemImage:"exclamationmark.circle");Text(checkpoint.goal);Text(checkpoint.lastResult).font(.footnote);Button("I reviewed affected files"){model.acknowledgeCheckpoint()}}.padding().background(.thinMaterial,in:RoundedRectangle(cornerRadius:22))}
+    }.padding(22)}.navigationTitle("Inbox").toolbar{ToolbarItem(placement:.topBarLeading){NavigationLink{SettingsView()}label:{Image("Brand").resizable().scaledToFit().frame(width:38,height:38).clipShape(Circle())}};ToolbarItem(placement:.topBarTrailing){NavigationLink{FilesView()}label:{Image(systemName:"magnifyingglass")}};ToolbarItem(placement:.topBarTrailing){NavigationLink{SetupView()}label:{Image(systemName:"folder.badge.plus")}}}.safeAreaInset(edge:.bottom){NavigationLink{OracleView()}label:{HStack{Image(systemName:"plus.circle.fill");Text("Plan, ask, build…");Spacer();Image(systemName:"arrow.up")}.font(.title3).foregroundStyle(.secondary).padding(18).glassEffect(.regular,in:Capsule()).padding(.horizontal,18).padding(.bottom,10)}}}}
+    func inboxCard(_ title:String,count:Int,icon:String,color:Color)->some View {VStack(alignment:.leading,spacing:25){Image(systemName:icon).foregroundStyle(color).font(.title2);HStack(spacing:7){Text(title);Text("\(count)").foregroundStyle(.secondary)}}.font(.system(size:18)).frame(maxWidth:.infinity,minHeight:118,alignment:.bottomLeading).padding(19).background(Color(uiColor:.secondarySystemGroupedBackground),in:RoundedRectangle(cornerRadius:25)).overlay(RoundedRectangle(cornerRadius:25).stroke(.primary.opacity(0.06)))}
+    func workspaceRow(_ title:String,icon:String,count:Int?)->some View {HStack(spacing:18){Image(systemName:icon).foregroundStyle(.secondary);Text(title);Spacer();if let count{Text("\(count)").foregroundStyle(.secondary)};Image(systemName:"chevron.right").foregroundStyle(.tertiary)}.font(.title3).padding(.vertical,20)}
+}
+struct OracleView:View {
+    @EnvironmentObject private var model:AppModel
     @Environment(\.openURL) private var openURL
-    var body:some View {
-        NavigationStack {ScrollView {VStack(alignment:.leading,spacing:24){
-            Text("LOCAL SANDBOX / CONTROL ROOM").font(.caption.monospaced()).foregroundStyle(.secondary)
-            Text("Your agents.\nYour rules.").font(.system(size:36,weight:.medium,design:.rounded))
-            VStack(alignment:.leading,spacing:16){Label("Oracle",systemImage:"sparkles").font(.title3.weight(.semibold));Text("What should your phone do?").font(.title2);TextField("Change Status: pending to Status: complete in workspace/test.txt",text:$goal,axis:.vertical).lineLimit(3...7).padding().background(.black.opacity(0.3),in:RoundedRectangle(cornerRadius:12))
-                if model.policy.provider=="local" {Button{var url=URLComponents();url.scheme="shortcuts";url.host="run-shortcut";url.queryItems=[URLQueryItem(name:"name",value:"Local Sandbox"),URLQueryItem(name:"input",value:"text"),URLQueryItem(name:"text",value:goal)];if let link=url.url{openURL(link)}}label:{Label("Open local runner in Shortcuts",systemImage:"arrow.up.right")}.buttonStyle(.borderedProminent).disabled(goal.isEmpty)}
-                else {Button{Task{await model.run(goal)}}label:{Label(model.running ? "Running…":"Run bounded task",systemImage:"arrow.right")}.buttonStyle(.borderedProminent).disabled(model.running || goal.isEmpty || !model.connected)}
-                if model.running{Button("Stop run",role:.destructive){AgentRunner.shared.cancel()}}
-                Text(model.progress).font(.footnote).foregroundStyle(.secondary)
-            }.padding(22).background(Color(red:0.12,green:0.17,blue:0.10),in:RoundedRectangle(cornerRadius:18))
-            if let checkpoint=model.checkpoint {VStack(alignment:.leading,spacing:12){Label("Interrupted run",systemImage:"exclamationmark.circle");Text(checkpoint.goal);Text("Phase: \(checkpoint.phase). Inspect affected files. Pending mutations are never replayed automatically.").font(.footnote);Button("I reviewed the checkpoint"){model.acknowledgeCheckpoint()}}.padding().background(.orange.opacity(0.1),in:RoundedRectangle(cornerRadius:14))}
-            HStack{Label(model.connected ? model.folderName:"Choose a sandbox folder",systemImage:"folder.badge.gearshape");Spacer();Image(systemName:model.connected ? "checkmark.shield":"lock")}.font(.subheadline)
-            VStack(alignment:.leading,spacing:14){Text("Power, with permission.").font(.title3);budget("Battery drop per run",value:$model.policy.batteryBudget,range:1...80);budget("Memory target",value:$model.policy.memoryTarget,range:10...80);Text("Memory measures this app’s footprint. System model services are outside that measurement; iOS owns allocation.").font(.caption).foregroundStyle(.secondary);Button("Save authorization"){model.savePolicy()}.buttonStyle(.bordered)}.padding(20).background(.white.opacity(0.035),in:RoundedRectangle(cornerRadius:16))
-            Button{dashboard=true}label:{Label("Open observation dashboard",systemImage:"globe")}.buttonStyle(.bordered)
-            Text("One model step → validated tool → readback → receipt.").font(.footnote).foregroundStyle(.secondary)
-        }.padding(22)}.navigationTitle("Local Sandbox").navigationBarTitleDisplayMode(.inline).sheet(isPresented:$dashboard){SafariView(url:URL(string:"https://local-sandbox.ctyy4wd4c2.chatgpt.site")!)}}
-    }
-    func budget(_ title:String,value:Binding<Int>,range:ClosedRange<Double>)->some View {VStack{HStack{Text(title);Spacer();Text("\(value.wrappedValue)%").monospacedDigit()};Slider(value:Binding(get:{Double(value.wrappedValue)},set:{value.wrappedValue=Int($0)}),in:range,step:1)}}
+    @State private var goal="";@State private var response="";@State private var prompt="";@State private var applying=false
+    var body:some View {ScrollView{VStack(alignment:.leading,spacing:22){Text("What should your phone do?").font(.title2);TextField("A small, verifiable task",text:$goal,axis:.vertical).lineLimit(3...6).padding().background(.thinMaterial,in:RoundedRectangle(cornerRadius:20))
+        if model.policy.provider=="apple" {Button(model.running ? "Running…":"Run with Apple Intelligence"){Task{await model.run(goal)}}.disabled(model.running || goal.isEmpty);if model.running{Button("Stop",role:.destructive){AgentRunner.shared.cancel()}}}
+        else {Button("Begin app handoff"){do{prompt=try ShortcutCoordinator.shared.begin(goal:goal,policy:model.policy);launch()}catch{model.error=error.localizedDescription}}.buttonStyle(.borderedProminent).disabled(goal.isEmpty || !model.connected)}
+        if let session=ShortcutCoordinator.shared.current(),["awaiting_response","applying"].contains(session.phase){Text("Step \(session.step) · \(session.phase.replacingOccurrences(of:"_",with:" "))").font(.footnote).foregroundStyle(.secondary);Button("Resume in app Shortcut"){prompt=ShortcutCoordinator.shared.prompt(session);launch()}.disabled(session.phase != "awaiting_response");Text("Return the app’s JSON response").font(.headline);TextEditor(text:$response).frame(minHeight:170).font(.system(.body,design:.monospaced)).padding(12).background(.thinMaterial,in:RoundedRectangle(cornerRadius:18));Text("Review the proposed tool and arguments before applying. File writes require the exact read hash and produce a readback receipt.").font(.footnote).foregroundStyle(.secondary);Button("Apply reviewed response"){applying=true;Task{defer{applying=false;model.refresh()};do{prompt=try await ShortcutCoordinator.shared.accept(response);response="";model.progress="App response processed"}catch{model.error=error.localizedDescription}}}.disabled(applying || response.isEmpty);Button("Stop handoff",role:.destructive){Task{do{try await ShortcutCoordinator.shared.stop();model.refresh()}catch{model.error=error.localizedDescription}}}}
+        if !prompt.isEmpty{ShareLink("Share current prompt",item:prompt)};Text(model.progress).font(.footnote).foregroundStyle(.secondary)
+    }.padding(22)}.navigationTitle("Oracle").onAppear{if let current=ShortcutCoordinator.shared.current(){goal=current.goal;prompt=ShortcutCoordinator.shared.prompt(current)}}}
+    private func launch(){let provider=AppProvider(rawValue:model.policy.provider) ?? .local;let adapter=AdapterSettings.get(provider);if let url=AdapterSettings.runURL(name:adapter.name,input:prompt){openURL(url){ok in if !ok{model.error="Shortcuts could not open. Install or configure the named shortcut first."}}}}
 }
 struct FilesView:View {
     @EnvironmentObject private var model:AppModel
@@ -112,24 +134,34 @@ struct ActivityView:View {
 }
 struct SettingsView:View {
     @EnvironmentObject private var model:AppModel
-    @State private var picker=false
-    @State private var apiKey=""
-    @State private var apiModel=""
-    @State private var delete=false
-    @State private var authState=""
-    var body:some View {
-        NavigationStack {Form {
-            Section("Apple account") {
-                if model.userID.isEmpty{SignInWithAppleButton(.signIn){request in authState=UUID().uuidString;request.state=authState;request.requestedScopes=[]}onCompletion:{result in switch result {case .success(let auth):if let credential=auth.credential as? ASAuthorizationAppleIDCredential,credential.state==authState{do{try Keychain.set(credential.user,for:"appleUser");model.userID=credential.user}catch{model.error=error.localizedDescription}}else{model.error="Apple credential could not be verified."};case .failure(let error):model.error=error.localizedDescription}}.signInWithAppleButtonStyle(.white).frame(height:46)}else{Label("Signed in with Apple",systemImage:"checkmark.seal")}
-                Text("Apple identity is local to this app. The web dashboard uses a separate ChatGPT session.").font(.caption).foregroundStyle(.secondary)
-            }
-            Section("iCloud folder") {Label(model.folderName,systemImage:"folder");Button("Choose LocalSandbox folder"){picker=true};Text("Choose iCloud Drive / Shortcuts / LocalSandbox. iOS grants access only to this folder. Signing in does not grant file access.").font(.caption).foregroundStyle(.secondary)}
-            Section("Reasoning provider") {Picker("Provider",selection:$model.policy.provider){Text("Apple Intelligence").tag("apple");Text("OpenAI").tag("openai");Text("Locally AI / LM Link via Shortcuts").tag("local")};TextField("Local adapter Shortcut",text:$model.policy.localShortcut);Toggle("Allow cloud reasoning",isOn:$model.policy.cloudAllowed);Text("Local providers require the named Shortcuts stack. They cannot be invoked through an invented app API.").font(.caption).foregroundStyle(.secondary)}
-            Section("OpenAI, your own API project") {SecureField("API key",text:$apiKey).textInputAutocapitalization(.never).autocorrectionDisabled();TextField("Model ID available to your project",text:$apiModel).textInputAutocapitalization(.never).autocorrectionDisabled();Button("Save in Keychain"){do{guard !apiKey.isEmpty,!apiModel.isEmpty else{throw SandboxError.invalid("Enter both a key and a model ID.")};try Keychain.set(apiKey,for:"openaiKey");try Keychain.set(apiModel,for:"openaiModel");apiKey="";model.progress="API configuration saved"}catch{model.error=error.localizedDescription}};Text("API billing is separate. Your key stays in this device’s Keychain and is sent only to api.openai.com.").font(.caption).foregroundStyle(.secondary)}
-            Section("Run limits") {Stepper("Battery reserve: \(model.policy.batteryReserve)%",value:$model.policy.batteryReserve,in:5...80);Stepper("Maximum steps: \(model.policy.maxSteps)",value:$model.policy.maxSteps,in:1...24);Stepper("Prompt cap: \(model.policy.contextChars) characters",value:$model.policy.contextChars,in:2000...12000,step:500);Toggle("Completion notifications",isOn:$model.policy.notifications);Button("Enable iOS notifications"){Task{do{let allowed=try await UNUserNotificationCenter.current().requestAuthorization(options:[.alert,.sound]);if !allowed{model.error="Notifications are disabled in iOS Settings."}}catch{model.error=error.localizedDescription}}};Button("Save authorization"){model.savePolicy()}}
-            Section("Setup and privacy") {Link("Visual Shortcuts setup guide",destination:URL(string:"https://local-sandbox.ctyy4wd4c2.chatgpt.site/downloads/Local-Sandbox-Setup-Guide.pdf")!);Text("Local files stay in the folder you select. Cloud providers receive compact task context only when authorized. This app does not include analytics or advertising SDKs.").font(.footnote);Button("Delete local profile",role:.destructive){delete=true}}
-        }.navigationTitle("Settings").fileImporter(isPresented:$picker,allowedContentTypes:[.folder],allowsMultipleSelection:false){result in do{if let url=try result.get().first{model.connect(url)}}catch{model.error=error.localizedDescription}}.alert("Delete local profile?",isPresented:$delete){Button("Delete profile",role:.destructive){model.deleteProfile()};Button("Cancel",role:.cancel){}}message:{Text("Removes Apple identity, API secrets, settings, and folder access from this app. Your iCloud files remain in Files.")}.onAppear{apiModel=Keychain.get("openaiModel") ?? ""}}
-    }
+    @State private var picker=false;@State private var delete=false
+    var body:some View {NavigationStack{Form{
+        Section("Apple account"){Label(model.userID.isEmpty ? "Sign in required":"Signed in with Apple",systemImage:"person.crop.circle.badge.checkmark");if model.userID.isEmpty{AppleLoginButton()}}
+        Section("iCloud workspace"){Label(model.folderName,systemImage:"folder");Button("Choose LocalSandbox folder"){picker=true};Text("On your next iPhone, sign in again and select this same iCloud folder. iOS rechecks file permission and provider availability.").font(.footnote).foregroundStyle(.secondary)}
+        Section{NavigationLink{ProvidersView()}label:{Label("Apps & Shortcuts",systemImage:"square.stack.3d.up")};NavigationLink{GitHubSettingsView()}label:{Label("GitHub authentication & sync",systemImage:"arrow.triangle.branch")};NavigationLink{SetupView()}label:{Label("Shortcut setup",systemImage:"link")}}
+        Section("Resource authorization"){budget("Battery drop",value:$model.policy.batteryBudget,range:1...80);budget("Memory target",value:$model.policy.memoryTarget,range:10...80);Stepper("Battery reserve: \(model.policy.batteryReserve)%",value:$model.policy.batteryReserve,in:5...80);Stepper("Maximum steps: \(model.policy.maxSteps)",value:$model.policy.maxSteps,in:1...24);Stepper("Prompt cap: \(model.policy.contextChars) characters",value:$model.policy.contextChars,in:2000...12000,step:500);Toggle("Allow cloud app handoffs",isOn:$model.policy.cloudAllowed);Toggle("Completion notifications",isOn:$model.policy.notifications);Button("Enable notifications"){Task{do{_ = try await UNUserNotificationCenter.current().requestAuthorization(options:[.alert,.sound])}catch{model.error=error.localizedDescription}}};Button("Save authorization"){model.savePolicy()};Text("Memory covers this app’s process, not another provider app. iOS owns resource allocation and background execution.").font(.footnote).foregroundStyle(.secondary)}
+        Section("Device capabilities"){ShareLink("Export device report",item:AdapterSettings.deviceReport());Text("Import this JSON in the dashboard to update its device capability display. Native checks always read current availability.").font(.footnote).foregroundStyle(.secondary)}
+        Section("Updates"){Text("Local Sandbox 0.2.0");Link("Current dashboard & downloads",destination:URL(string:"https://local-sandbox.ctyy4wd4c2.chatgpt.site")!);Text("Native updates use signed Xcode, TestFlight, or App Store builds. Workspace data is preserved. Shortcuts use reviewed, versioned shared links; no executable code is downloaded and run as an app patch.").font(.footnote).foregroundStyle(.secondary)}
+        Section{Button("Delete local profile",role:.destructive){delete=true}}
+    }.navigationTitle("Settings").fileImporter(isPresented:$picker,allowedContentTypes:[.folder],allowsMultipleSelection:false){result in do{if let url=try result.get().first{model.connect(url)}}catch{model.error=error.localizedDescription}}.alert("Delete local profile?",isPresented:$delete){Button("Delete",role:.destructive){model.deleteProfile()};Button("Cancel",role:.cancel){}}message:{Text("Removes local identity, GitHub credentials, preferences, and folder access. Your iCloud files remain.")}}}
+    func budget(_ title:String,value:Binding<Int>,range:ClosedRange<Double>)->some View {VStack{HStack{Text(title);Spacer();Text("\(value.wrappedValue)%").monospacedDigit()};Slider(value:Binding(get:{Double(value.wrappedValue)},set:{value.wrappedValue=Int($0)}),in:range,step:1)}}
+}
+struct ProvidersView:View {
+    @EnvironmentObject private var model:AppModel
+    @State private var selected:AppProvider?
+    var body:some View {List{ForEach(AppProvider.allCases){provider in Button{if let reason=provider.unavailableReason{model.error=reason}else{selected=provider}}label:{HStack(spacing:15){Image(systemName:provider == .apple ? "sparkles":"square.stack.3d.up");VStack(alignment:.leading,spacing:4){Text(provider.title).foregroundStyle(.primary);Text(provider.unavailableReason == nil ? (AdapterSettings.get(provider).tested ? "Shortcut tested":"Configure app Shortcut"):"Not available on this iPhone").font(.footnote).foregroundStyle(.secondary)};Spacer();if model.policy.provider==provider.rawValue{Image(systemName:"checkmark")};Image(systemName:"chevron.right").foregroundStyle(.tertiary)}}};Section{Text("App sign-in and subscription limits remain in each provider’s app. Opening an app is not proof that its Shortcuts action is installed. Test the text round-trip below.").font(.footnote).foregroundStyle(.secondary)}}.navigationTitle("Apps & Shortcuts").sheet(item:$selected){provider in NavigationStack{AdapterView(provider:provider)}}}
+}
+struct AdapterView:View {
+    let provider:AppProvider
+    @EnvironmentObject private var model:AppModel
+    @Environment(\.openURL) private var openURL
+    @Environment(\.dismiss) private var dismiss
+    @State private var adapter=ShortcutAdapter(name:"")
+    var body:some View {Form{Section("App account"){Text("Sign in to \(provider.title) in its own app. No model API key is used.")};Section("Shortcut"){TextField("Name",text:$adapter.name);Toggle("Manual return",isOn:Binding(get:{adapter.mode=="manual"},set:{adapter.mode=$0 ? "manual":"action"}));TextField("Shared iCloud install link (optional)",text:$adapter.installURL).textInputAutocapitalization(.never).autocorrectionDisabled();Button(adapter.installURL.isEmpty ? "Create in Shortcuts":"Add shared Shortcut"){do{try AdapterSettings.save(adapter,for:provider);if let url=URL(string:adapter.installURL.isEmpty ? "shortcuts://create-shortcut":adapter.installURL){openURL(url)}}catch{model.error=error.localizedDescription}};Button("Test text round-trip"){if let url=AdapterSettings.runURL(name:adapter.name,input:"Return only {\"kind\":\"final\",\"summary\":\"Shortcut text round-trip works\"}. Do not edit files."){openURL(url)}};Toggle("I received the test response",isOn:$adapter.tested)};Section("Build order"){Text("1. Accept Shortcut Input as text.\n2. Pass it to the text-returning action offered by the installed app.\n3. Stop and Output the result.\n\nIf no action is offered, use Open App and manually return the response. Grokbot and LM Link require selecting your actual installed app action.")};Button("Save and select"){do{try AdapterSettings.save(adapter,for:provider);model.policy.provider=provider.rawValue;model.savePolicy();dismiss()}catch{model.error=error.localizedDescription}}}.navigationTitle(provider.title).navigationBarTitleDisplayMode(.inline).toolbar{Button("Done"){dismiss()}}.onAppear{adapter=AdapterSettings.get(provider)}}
+}
+struct SetupView:View {
+    @EnvironmentObject private var model:AppModel
+    var body:some View {List{Section("1 · Prepare"){NavigationLink{SettingsView()}label:{Label("Sign in & choose iCloud folder",systemImage:"person.crop.circle")};Button("Prepare selected workspace"){do{try model.prepare();model.refresh()}catch{model.error=error.localizedDescription}}.disabled(!model.connected)};Section("2 · App Shortcuts"){Text("Installing this native app registers Begin Oracle Task, Apply Reviewed Action, Prepare Workspace, and Open Local Sandbox. Find these under Local Sandbox in the Shortcuts app.");NavigationLink{ProvidersView()}label:{Label("Connect provider Shortcuts",systemImage:"link")}};Section("3 · Run a stack"){Text("Begin Oracle Task → selected app text action → Apply Reviewed Action. For each next step, use the returned prompt. Stop when the returned phase is no longer awaiting_response. Start with a read-only test and six steps maximum.");Link("Create runner Shortcut",destination:URL(string:"shortcuts://create-shortcut")!)};Section("Visual guide"){Link("Open setup guide",destination:URL(string:"https://local-sandbox.ctyy4wd4c2.chatgpt.site/downloads/Local-Sandbox-Setup-Guide.pdf")!)}}.navigationTitle("Set up Shortcuts")}
 }
 struct SafariView:UIViewControllerRepresentable {
     let url:URL

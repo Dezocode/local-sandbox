@@ -1,8 +1,8 @@
 import { env } from 'cloudflare:workers';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { z } from 'zod';
-import { defaultPolicy, policySchema, receiptSchema } from './contracts';
-import { oraclePolicy } from './catalog';
+import { defaultPolicy, normalizeSavedPolicy, policySchema, receiptSchema } from './contracts';
+import { oraclePolicy, shortcuts } from './catalog';
 
 export class HttpError extends Error {constructor(public status:number,message:string){super(message);}}
 export function database(){if(!env.DB)throw new HttpError(503,'Workspace storage is unavailable. Please retry.');return env.DB;}
@@ -22,7 +22,5 @@ export async function initialize(userId:string){const db=database();await db.bat
   db.prepare('INSERT OR IGNORE INTO files(user_id,path,content,version) VALUES (?,?,?,0)').bind(userId,'workspace/welcome.md','# Local Sandbox\n\nThis is your online source workspace. It is separate from iCloud Drive.\n\nExport files to your approved LocalSandbox folder on iPhone.\n\nStart with one task, one tool action, and a receipt.\n'),
 ]);}
 const settingsSchema=z.object({policy:z.string(),completed:z.string(),revision:z.number()});
-export async function settings(userId:string){const result=settingsSchema.parse(await database().prepare('SELECT policy,completed,revision FROM workspaces WHERE user_id=?').bind(userId).first());return {policy:policySchema.parse(JSON.parse(result.policy)),completed:z.array(z.string()).parse(JSON.parse(result.completed)),revision:result.revision};}
+export async function settings(userId:string){const result=settingsSchema.parse(await database().prepare('SELECT policy,completed,revision FROM workspaces WHERE user_id=?').bind(userId).first());return {policy:normalizeSavedPolicy(JSON.parse(result.policy)),completed:z.array(z.string()).parse(JSON.parse(result.completed)).filter(id=>shortcuts.some(s=>s.id===id)),revision:result.revision};}
 export async function putReceipt(userId:string,receipt:z.infer<typeof receiptSchema>){await database().prepare('INSERT OR IGNORE INTO receipts(user_id,id,payload,created_at) VALUES(?,?,?,?)').bind(userId,receipt.id,JSON.stringify(receipt),receipt.createdAt).run();}
-export function providerConfig(){const key=process.env.OPENAI_API_KEY;const model=process.env.OPENAI_MODEL;return key&&model?{key,model}:null;}
-export async function frontierAllowance(userId:string){const current=await settings(userId);if(!current.policy.cloudAllowed)throw new HttpError(403,'Cloud reasoning is off. Save cloud authorization in Resource controls first.');const config=providerConfig();if(!config)throw new HttpError(503,'OpenAI is not configured. Set server runtime OPENAI_API_KEY and OPENAI_MODEL.');const window=new Date().toISOString().slice(0,13);const updated=await database().prepare('INSERT INTO usage(user_id,window,calls) VALUES(?,?,1) ON CONFLICT(user_id,window) DO UPDATE SET calls=calls+1 WHERE calls<30 RETURNING calls').bind(userId,window).first();if(!updated)throw new HttpError(429,'The 30-call hourly cloud limit has been reached.');return {config,policy:current.policy};}

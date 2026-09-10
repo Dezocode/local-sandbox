@@ -1,7 +1,7 @@
 {
-  "date": "2026-09-10T17:42:50.201440+00:00",
+  "date": "2026-09-10T18:36:11.723054+00:00",
   "contractTests": {
-    "passed": 6,
+    "passed": 14,
     "failed": 0
   },
   "storageQueries": {
@@ -12,22 +12,31 @@
       "Policy compare-and-swap rejects stale authorization",
       "Create does not overwrite an existing file",
       "Receipt IDs cannot overwrite prior evidence",
-      "Hourly cloud quota caps at 30 calls"
+      "Retired model API endpoint cannot spend API credits"
     ]
   },
   "webBuild": "passed",
   "typecheck": "passed",
   "pdf": {
-    "pages": 16,
+    "pages": 24,
     "rendered": true,
     "visuallyInspected": true
   },
-  "xcodeProjectStructure": "references and XML/plist files checked",
+  "xcodeProjectStructure": "47 references resolve; plist files parse; 9 Swift source files present",
   "workerIntegration": "not completed: environment cancelled network approval while starting local workerd",
   "nativeCompilation": "not performed: Apple SDK and Xcode unavailable",
   "nativeDeviceTests": "not performed",
   "webmcpRuntime": "not tested: no permitted supported browser context",
   "appleSignIn": "not tested",
   "githubPublication": "not performed: target repository returned 404; repository-creation tool and authenticated CLI unavailable",
-  "appStore": "not submitted"
+  "appStore": "not submitted",
+  "version": "0.2.0",
+  "worktreeTests": {
+    "passed": 8,
+    "failed": 0,
+    "environment": "real temporary Git repository; offline"
+  },
+  "gitHubLiveSync": "not tested: user repository token not configured",
+  "appShortcuts": "native actions implemented; installation and third-party app round-trip untested",
+  "ios27": "explicit acceptance target; Apple SDK and physical device unavailable"
 }

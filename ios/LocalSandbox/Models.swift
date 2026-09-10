@@ -9,13 +9,13 @@ struct ResourcePolicy: Codable, Equatable {
     var contextChars = 6000
     var cloudAllowed = false
     var notifications = true
-    var provider = "apple"
+    var provider = "local"
     var localShortcut = "Agent Step - Local"
     func validated() throws -> Self {
         guard (1...80).contains(batteryBudget), (5...80).contains(batteryReserve),
               (10...80).contains(memoryTarget), (1...24).contains(maxSteps),
               (1...3).contains(maxFailures), (2000...12000).contains(contextChars),
-              ["local", "apple", "openai"].contains(provider), !localShortcut.isEmpty,
+              ["local", "apple", "chatgpt", "grok", "grokbot", "claude"].contains(provider), !localShortcut.isEmpty,
               localShortcut.count <= 80 else { throw SandboxError.invalid("INVALID_POLICY") }
         return self
     }

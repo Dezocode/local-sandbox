@@ -1,1 +1,17 @@
-{"name":"Local Sandbox","short_name":"Sandbox","description":"Your iOS agent control room","start_url":"/","display":"standalone","background_color":"#0d0f10","theme_color":"#0d0f10","icons":[{"src":"/favicon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]}
+{
+  "name": "Local Sandbox",
+  "short_name": "Sandbox",
+  "description": "Your iOS agent control room",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111112",
+  "theme_color": "#111112",
+  "icons": [
+    {
+      "src": "/app-icon.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

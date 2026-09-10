@@ -6,6 +6,6 @@
     "Policy compare-and-swap rejects stale authorization",
     "Create does not overwrite an existing file",
     "Receipt IDs cannot overwrite prior evidence",
-    "Hourly cloud quota caps at 30 calls"
+    "Retired model API endpoint cannot spend API credits"
   ]
 }

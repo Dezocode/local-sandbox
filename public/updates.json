@@ -1,0 +1,12 @@
+{
+  "product": "Local Sandbox",
+  "version": "0.2.0",
+  "dataSchema": 2,
+  "minimumIOS": "26.0",
+  "requestedValidation": ["iOS 26", "iOS 27.0", "iPhone 14 Pro", "Apple Intelligence capable iPhone"],
+  "nativeDeviceValidation": "pending",
+  "channels": {"web": "versioned private deployment", "native": "signed Xcode, TestFlight, or App Store build", "shortcuts": "reviewed iCloud share links"},
+  "changes": ["System light/dark glass navigation", "App subscription Shortcuts providers", "GitHub branch sync and worktree patches", "Persistent native app-handoff checkpoints"],
+  "source": "/downloads/Local-Sandbox-Source.zip",
+  "guide": "/downloads/Local-Sandbox-Setup-Guide.pdf"
+}

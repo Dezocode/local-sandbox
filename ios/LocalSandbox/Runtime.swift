@@ -102,6 +102,7 @@ final class AgentRunner {
     private var generation: Task<String, Error>?
     func cancel() { cancelled = true; generation?.cancel() }
     func run(goal: String, policy rawPolicy: ResourcePolicy, onProgress: @escaping (String) -> Void = { _ in }) async throws -> RunReceipt {
+        guard ShortcutCoordinator.shared.current()?.phase != "awaiting_response", ShortcutCoordinator.shared.current()?.phase != "applying" else { throw SandboxError.blocked("FINISH_PENDING_APP_HANDOFF_FIRST") }
         guard !running else { throw SandboxError.blocked("ANOTHER_RUN_IS_ACTIVE") }
         let policy = try rawPolicy.validated()
         guard !goal.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, goal.count <= 2000 else { throw SandboxError.invalid("GOAL_MUST_BE_1_TO_2000_CHARACTERS") }
@@ -122,7 +123,6 @@ final class AgentRunner {
         let provider: any StepProvider
         switch policy.provider {
         case "apple": provider = AppleProvider()
-        case "openai": provider = OpenAIProvider()
         default: throw SandboxError.blocked("RUN_LOCAL_PROVIDER_THROUGH_SHORTCUTS")
         }
         for step in 0..<policy.maxSteps {

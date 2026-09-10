@@ -4,10 +4,14 @@ export const policySchema = z.object({
   batteryBudget: z.number().int().min(1).max(80), batteryReserve: z.number().int().min(5).max(80),
   memoryTarget: z.number().int().min(10).max(80), maxSteps: z.number().int().min(1).max(24),
   maxFailures: z.number().int().min(1).max(3), contextChars: z.number().int().min(2000).max(12000),
-  cloudAllowed: z.boolean(), notifications: z.boolean(), provider: z.enum(['local','apple','openai']),
+  cloudAllowed: z.boolean(), notifications: z.boolean(), provider: z.enum(['local','apple','chatgpt','grok','grokbot','claude']),
   localShortcut: z.string().min(1).max(80),
 }).strict();
 export type Policy = z.infer<typeof policySchema>;
+export function normalizeSavedPolicy(value:unknown):Policy {
+  const legacy=z.object({provider:z.literal('openai')}).passthrough().safeParse(value);
+  return policySchema.parse(legacy.success?{...legacy.data,provider:'chatgpt'}:value);
+}
 export const defaultPolicy: Policy = { batteryBudget:15, batteryReserve:20, memoryTarget:35, maxSteps:6, maxFailures:3, contextChars:6000, cloudAllowed:false, notifications:true, provider:'local', localShortcut:'Agent Step - Local' };
 export const fileSchema = z.object({path:pathSchema, content:z.string().max(64000), version:z.number().int().nonnegative()});
 export type SandboxFile = z.infer<typeof fileSchema>;
