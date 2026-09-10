@@ -1,0 +1,33 @@
+name: Validate Local Sandbox
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  web-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsc --noEmit
+      - run: node --experimental-strip-types --test tests/contracts.test.ts
+      - run: python3 tests/storage.test.py
+  native:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show installed Apple toolchain
+        run: xcodebuild -version && xcodebuild -showsdks
+      - name: Compile native app
+        run: xcodebuild -project ios/LocalSandbox.xcodeproj -scheme LocalSandbox -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+      - name: Run contract tests on an available iPhone simulator
+        shell: bash
+        run: |
+          LOCAL_SANDBOX_SIMULATOR=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); rows=[v for k,a in d["devices"].items() if "iOS-26" in k for v in a if "iPhone" in v["name"]]; print(rows[0]["udid"] if rows else "")')
+          test -n "$LOCAL_SANDBOX_SIMULATOR"
+          xcodebuild -project ios/LocalSandbox.xcodeproj -scheme LocalSandbox -destination "platform=iOS Simulator,id=$LOCAL_SANDBOX_SIMULATOR" CODE_SIGNING_ALLOWED=NO test

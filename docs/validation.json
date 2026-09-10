@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-10T17:42:50.201440+00:00",
+  "contractTests": {
+    "passed": 6,
+    "failed": 0
+  },
+  "storageQueries": {
+    "passed": 6,
+    "checks": [
+      "Source queries isolate file reads by owner",
+      "File compare-and-swap rejects stale revision",
+      "Policy compare-and-swap rejects stale authorization",
+      "Create does not overwrite an existing file",
+      "Receipt IDs cannot overwrite prior evidence",
+      "Hourly cloud quota caps at 30 calls"
+    ]
+  },
+  "webBuild": "passed",
+  "typecheck": "passed",
+  "pdf": {
+    "pages": 16,
+    "rendered": true,
+    "visuallyInspected": true
+  },
+  "xcodeProjectStructure": "references and XML/plist files checked",
+  "workerIntegration": "not completed: environment cancelled network approval while starting local workerd",
+  "nativeCompilation": "not performed: Apple SDK and Xcode unavailable",
+  "nativeDeviceTests": "not performed",
+  "webmcpRuntime": "not tested: no permitted supported browser context",
+  "appleSignIn": "not tested",
+  "githubPublication": "not performed: target repository returned 404; repository-creation tool and authenticated CLI unavailable",
+  "appStore": "not submitted"
+}

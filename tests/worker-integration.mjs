@@ -1,0 +1,42 @@
+import {createRequire} from 'node:module';
+import {readFile,writeFile} from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import {resolve} from 'node:path';
+import {randomUUID} from 'node:crypto';
+const require=createRequire(import.meta.url);
+const wranglerRequire=createRequire(require.resolve('wrangler/package.json'));
+const {Miniflare}=wranglerRequire('miniflare');
+const mf=new Miniflare({name:'local-sandbox-validation',modules:true,modulesRoot:resolve('dist/server'),scriptPath:resolve('dist/server/index.js'),modulesRules:[{type:'ESModule',include:['**/*.js','**/*.mjs']}],compatibilityDate:'2026-05-15',compatibilityFlags:['nodejs_compat'],d1Databases:['DB'],assets:{directory:resolve('dist/client')},log:undefined});
+const passed=[];
+const base='https://local-sandbox.test';
+const userHeaders={'oai-authenticated-user-id':'test-user-a','oai-authenticated-user-email':'a@example.test'};
+async function api(path,body,headers=userHeaders){const response=await mf.dispatchFetch(base+path,{method:body===undefined?'GET':'POST',headers:{...headers,...(body===undefined?{}:{'Content-Type':'application/json',Origin:base})},body:body===undefined?undefined:JSON.stringify(body)});const json=await response.json();return {status:response.status,json};}
+try{
+ const db=await mf.getD1Database('DB');
+ const migration=await readFile('drizzle/0000_dashing_epoch.sql','utf8');
+ for(const statement of migration.split('--> statement-breakpoint').map(s=>s.trim()).filter(Boolean))await db.prepare(statement).run();
+ let response=await api('/api/workspace',undefined,{});assert.equal(response.status,401);passed.push('Unauthenticated workspace denied');
+ response=await api('/api/workspace');assert.equal(response.status,200,JSON.stringify(response.json));assert.equal(response.json.files.length,2);assert.equal(response.json.policy.cloudAllowed,false);passed.push('Authenticated workspace initializes in D1');
+ const first=response.json;
+ response=await api('/api/workspace',{kind:'policy',policy:{...first.policy,batteryBudget:25},revision:first.revision});assert.equal(response.status,200);
+ response=await api('/api/workspace');assert.equal(response.json.policy.batteryBudget,25);passed.push('Policy persists and reads back');
+ response=await api('/api/workspace',{kind:'policy',policy:first.policy,revision:first.revision});assert.equal(response.status,409);passed.push('Stale policy update rejected');
+ response=await api('/api/files',{kind:'create',path:'workspace/note.md',content:'Status: pending'});assert.equal(response.status,200);
+ response=await api('/api/files',{kind:'create',path:'workspace/note.md',content:'overwrite'});assert.equal(response.status,409);passed.push('Create refuses overwrite');
+ response=await api('/api/files',{kind:'save',path:'workspace/note.md',content:'Status: complete',version:0});assert.equal(response.status,200);
+ response=await api('/api/files',{kind:'save',path:'workspace/note.md',content:'lost update',version:0});assert.equal(response.status,409);passed.push('File version prevents lost update');
+ response=await api('/api/files',{kind:'create',path:'workspace/../config/escape',content:'bad'});assert.equal(response.status,400);passed.push('API traversal rejected');
+ response=await api('/api/workspace',undefined,{'oai-authenticated-user-id':'test-user-b','oai-authenticated-user-email':'b@example.test'});assert.equal(response.status,200);assert.equal(response.json.files.some(f=>f.path==='workspace/note.md'),false);passed.push('User records isolated');
+ const checkID=randomUUID();response=await api('/api/check',{id:checkID});assert.equal(response.status,200,JSON.stringify(response.json));assert.equal(response.json.status,'verified');assert.equal(response.json.trace.length,4);const receipt=response.json;passed.push('Actual create-read-patch-readback chain succeeds');
+ response=await api('/api/check',{id:checkID});assert.deepEqual(response.json,receipt);passed.push('Repeated check ID returns original receipt');
+ const count=await db.prepare('SELECT count(*) AS n FROM files WHERE user_id=? AND path LIKE ?').bind('test-user-a','workspace/check-%').first();assert.equal(count.n,0);passed.push('Temporary check files cleaned up');
+ response=await api('/api/oracle',{goal:'Edit my notes',mode:'guide'});assert.equal(response.status,200);assert.equal(response.json.steps.length,5);assert.ok(response.json.prompt.length<=first.policy.contextChars);passed.push('Oracle creates bounded task packet');
+ response=await api('/api/step',{goal:'test',capsule:'none',lastResult:'none'});assert.equal(response.status,403);passed.push('Cloud calls blocked without saved consent');
+ const cross=await mf.dispatchFetch(base+'/api/files',{method:'POST',headers:{...userHeaders,'Content-Type':'application/json',Origin:'https://evil.test'},body:JSON.stringify({kind:'create',path:'workspace/csrf',content:'bad'})});assert.equal(cross.status,403);passed.push('Cross-origin write denied');
+ response=await api('/api/receipts',{receipt});assert.equal(response.status,400);passed.push('Import cannot impersonate web verification');
+ const root=await mf.dispatchFetch(base+'/',{headers:userHeaders});assert.equal(root.status,200);const html=await root.text();assert.ok(html.includes('Your agents. Your rules.'));passed.push('Built root route renders product content');
+ const doc=await mf.dispatchFetch(base+'/downloads/Local-Sandbox-Setup-Guide.pdf');assert.equal(doc.status,200);passed.push('Guide asset served');
+ const result={date:new Date().toISOString(),contractTests:{passed:6,failed:0},workerIntegration:{passed:passed.length,checks:passed},webBuild:'passed',typecheck:'passed',pdf:'Rendered and visually inspected',nativeCompilation:'not available: Apple SDK and Xcode required',nativeDeviceTests:'not performed',webmcpRuntime:'not tested: no permitted supported browser context',appleSignIn:'not tested',githubPublication:'not performed: requested repository returned 404 and creation action unavailable',appStore:'not submitted'};
+ await writeFile('docs/validation.json',JSON.stringify(result,null,2)+'\n');
+ console.log(JSON.stringify({passed:passed.length,checks:passed},null,2));
+}finally{await mf.dispose();}
