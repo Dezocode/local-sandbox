@@ -1,0 +1,1766 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "d33c674b-c0c6-4df6-87c7-7785df4b95e4",
+  "prevId": "bf64171c-2da7-4fe7-aa77-1a9ea85fd296",
+  "tables": {
+    "apple_account_deletion_subjects": {
+      "name": "apple_account_deletion_subjects",
+      "columns": {
+        "deletion_key_hash": {
+          "name": "deletion_key_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "apple_subject_hash": {
+          "name": "apple_subject_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "apple_account_deletion_subjects_deletion_key_hash_apple_account_deletions_deletion_key_hash_fk": {
+          "name": "apple_account_deletion_subjects_deletion_key_hash_apple_account_deletions_deletion_key_hash_fk",
+          "tableFrom": "apple_account_deletion_subjects",
+          "tableTo": "apple_account_deletions",
+          "columnsFrom": [
+            "deletion_key_hash"
+          ],
+          "columnsTo": [
+            "deletion_key_hash"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "apple_account_deletion_subjects_deletion_key_hash_apple_subject_hash_pk": {
+          "columns": [
+            "deletion_key_hash",
+            "apple_subject_hash"
+          ],
+          "name": "apple_account_deletion_subjects_deletion_key_hash_apple_subject_hash_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "apple_account_deletions": {
+      "name": "apple_account_deletions",
+      "columns": {
+        "deletion_key_hash": {
+          "name": "deletion_key_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_binding": {
+          "name": "owner_binding",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "apple_subject_hash": {
+          "name": "apple_subject_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "apple_principal_id": {
+          "name": "apple_principal_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "delete_owner_data": {
+          "name": "delete_owner_data",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "provider_credentials": {
+          "name": "provider_credentials",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "origin_connections": {
+          "name": "origin_connections",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revocation_lease_token": {
+          "name": "revocation_lease_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revocation_lease_until": {
+          "name": "revocation_lease_until",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "completion_fence_token": {
+          "name": "completion_fence_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "apple_account_deletions_expiry_idx": {
+          "name": "apple_account_deletions_expiry_idx",
+          "columns": [
+            "expires_at",
+            "deletion_key_hash"
+          ],
+          "isUnique": false
+        },
+        "apple_account_deletions_subject_expiry_idx": {
+          "name": "apple_account_deletions_subject_expiry_idx",
+          "columns": [
+            "apple_subject_hash",
+            "expires_at"
+          ],
+          "isUnique": false
+        },
+        "apple_account_deletions_owner_subject_expiry_idx": {
+          "name": "apple_account_deletions_owner_subject_expiry_idx",
+          "columns": [
+            "owner_id",
+            "apple_subject_hash",
+            "expires_at"
+          ],
+          "isUnique": false
+        },
+        "apple_account_deletions_standalone_lease_idx": {
+          "name": "apple_account_deletions_standalone_lease_idx",
+          "columns": [
+            "owner_id"
+          ],
+          "isUnique": true,
+          "where": "\"apple_account_deletions\".\"revocation_lease_token\" is not null and \"apple_account_deletions\".\"delete_owner_data\"=1"
+        },
+        "apple_account_deletions_linked_lease_idx": {
+          "name": "apple_account_deletions_linked_lease_idx",
+          "columns": [
+            "owner_id",
+            "apple_principal_id"
+          ],
+          "isUnique": true,
+          "where": "\"apple_account_deletions\".\"revocation_lease_token\" is not null and \"apple_account_deletions\".\"delete_owner_data\"=0"
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "apple_auth_admission_cutover": {
+      "name": "apple_auth_admission_cutover",
+      "columns": {
+        "singleton": {
+          "name": "singleton",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cutover_at": {
+          "name": "cutover_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "apple_auth_admission_cutover_singleton_check": {
+          "name": "apple_auth_admission_cutover_singleton_check",
+          "value": "\"apple_auth_admission_cutover\".\"singleton\"=1"
+        },
+        "apple_auth_admission_cutover_time_check": {
+          "name": "apple_auth_admission_cutover_time_check",
+          "value": "\"apple_auth_admission_cutover\".\"cutover_at\">=0"
+        }
+      }
+    },
+    "apple_auth_flows": {
+      "name": "apple_auth_flows",
+      "columns": {
+        "schema_version": {
+          "name": "schema_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "state_hash": {
+          "name": "state_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "purpose": {
+          "name": "purpose",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "nonce_hash": {
+          "name": "nonce_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "browser_binding_hash": {
+          "name": "browser_binding_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_binding": {
+          "name": "owner_binding",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "return_to": {
+          "name": "return_to",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "consumed_at": {
+          "name": "consumed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "apple_auth_flows_expiry_idx": {
+          "name": "apple_auth_flows_expiry_idx",
+          "columns": [
+            "expires_at",
+            "state_hash"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "apple_auth_notifications": {
+      "name": "apple_auth_notifications",
+      "columns": {
+        "notification_id_hash": {
+          "name": "notification_id_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "apple_subject_hash": {
+          "name": "apple_subject_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "issued_at": {
+          "name": "issued_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "event_time": {
+          "name": "event_time",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "origin_connections": {
+          "name": "origin_connections",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "origin_unresolved_installation_ids": {
+          "name": "origin_unresolved_installation_ids",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "processed_at": {
+          "name": "processed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "apple_auth_notifications_expiry_idx": {
+          "name": "apple_auth_notifications_expiry_idx",
+          "columns": [
+            "expires_at",
+            "notification_id_hash"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "apple_auth_possible_credentials": {
+      "name": "apple_auth_possible_credentials",
+      "columns": {
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "apple_principal_id": {
+          "name": "apple_principal_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "apple_subject_hash": {
+          "name": "apple_subject_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "attempt_token": {
+          "name": "attempt_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "review_token": {
+          "name": "review_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "credential_state": {
+          "name": "credential_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'prepared'"
+        },
+        "marked_at": {
+          "name": "marked_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "apple_auth_possible_credentials_subject_idx": {
+          "name": "apple_auth_possible_credentials_subject_idx",
+          "columns": [
+            "owner_id",
+            "apple_subject_hash"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "apple_auth_possible_credentials_owner_id_apple_principal_id_pk": {
+          "columns": [
+            "owner_id",
+            "apple_principal_id"
+          ],
+          "name": "apple_auth_possible_credentials_owner_id_apple_principal_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "apple_auth_possible_credentials_hash_check": {
+          "name": "apple_auth_possible_credentials_hash_check",
+          "value": "length(\"apple_auth_possible_credentials\".\"apple_principal_id\")=43 and length(\"apple_auth_possible_credentials\".\"apple_subject_hash\")=43 and length(\"apple_auth_possible_credentials\".\"attempt_token\")=43 and length(\"apple_auth_possible_credentials\".\"review_token\")=43"
+        },
+        "apple_auth_possible_credentials_state_check": {
+          "name": "apple_auth_possible_credentials_state_check",
+          "value": "\"apple_auth_possible_credentials\".\"credential_state\" in ('prepared','possible')"
+        }
+      }
+    },
+    "apple_auth_sessions": {
+      "name": "apple_auth_sessions",
+      "columns": {
+        "schema_version": {
+          "name": "schema_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "session_hash": {
+          "name": "session_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_binding": {
+          "name": "owner_binding",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "apple_subject_hash": {
+          "name": "apple_subject_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "encrypted_credentials": {
+          "name": "encrypted_credentials",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "last_validated_at": {
+          "name": "last_validated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "apple_auth_sessions_expiry_idx": {
+          "name": "apple_auth_sessions_expiry_idx",
+          "columns": [
+            "expires_at",
+            "session_hash"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "apple_identity_links": {
+      "name": "apple_identity_links",
+      "columns": {
+        "apple_subject_hash": {
+          "name": "apple_subject_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "principal_id": {
+          "name": "principal_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "principal_created_at": {
+          "name": "principal_created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email_forwarding_enabled": {
+          "name": "email_forwarding_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "email_state_updated_at": {
+          "name": "email_state_updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "apple_identity_links_principal_idx": {
+          "name": "apple_identity_links_principal_idx",
+          "columns": [
+            "owner_id",
+            "principal_id",
+            "apple_subject_hash"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "apple_native_authorization_code_claims": {
+      "name": "apple_native_authorization_code_claims",
+      "columns": {
+        "authorization_code_hash": {
+          "name": "authorization_code_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "claimed_at": {
+          "name": "claimed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "apple_native_authorization_code_claims_expiry_idx": {
+          "name": "apple_native_authorization_code_claims_expiry_idx",
+          "columns": [
+            "expires_at",
+            "authorization_code_hash"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "apple_native_grants": {
+      "name": "apple_native_grants",
+      "columns": {
+        "schema_version": {
+          "name": "schema_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "grant_hash": {
+          "name": "grant_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "authorization_code_hash": {
+          "name": "authorization_code_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "session_hash": {
+          "name": "session_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "principal_id": {
+          "name": "principal_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "apple_subject_hash": {
+          "name": "apple_subject_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_binding": {
+          "name": "owner_binding",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "encrypted_credentials": {
+          "name": "encrypted_credentials",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "last_validated_at": {
+          "name": "last_validated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revocation_pending_at": {
+          "name": "revocation_pending_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "apple_native_grants_authorization_code_unique": {
+          "name": "apple_native_grants_authorization_code_unique",
+          "columns": [
+            "authorization_code_hash"
+          ],
+          "isUnique": true
+        },
+        "apple_native_grants_session_unique": {
+          "name": "apple_native_grants_session_unique",
+          "columns": [
+            "session_hash"
+          ],
+          "isUnique": true
+        },
+        "apple_native_grants_principal_idx": {
+          "name": "apple_native_grants_principal_idx",
+          "columns": [
+            "owner_id",
+            "principal_id",
+            "grant_hash"
+          ],
+          "isUnique": false
+        },
+        "apple_native_grants_expiry_idx": {
+          "name": "apple_native_grants_expiry_idx",
+          "columns": [
+            "expires_at",
+            "grant_hash"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "apple_native_sessions": {
+      "name": "apple_native_sessions",
+      "columns": {
+        "schema_version": {
+          "name": "schema_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "identity_token_hash": {
+          "name": "identity_token_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "session_hash": {
+          "name": "session_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "apple_subject_hash": {
+          "name": "apple_subject_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "identity_token_expires_at": {
+          "name": "identity_token_expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "apple_native_sessions_session_hash_unique": {
+          "name": "apple_native_sessions_session_hash_unique",
+          "columns": [
+            "session_hash"
+          ],
+          "isUnique": true
+        },
+        "apple_native_sessions_expiry_idx": {
+          "name": "apple_native_sessions_expiry_idx",
+          "columns": [
+            "expires_at",
+            "identity_token_hash"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "apple_owner_external_operation_leases": {
+      "name": "apple_owner_external_operation_leases",
+      "columns": {
+        "lease_token": {
+          "name": "lease_token",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "operation_kind": {
+          "name": "operation_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resource_id": {
+          "name": "resource_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "apple_subject_hash": {
+          "name": "apple_subject_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "apple_principal_id": {
+          "name": "apple_principal_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "claimed_at": {
+          "name": "claimed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "apple_owner_external_operation_leases_expiry_idx": {
+          "name": "apple_owner_external_operation_leases_expiry_idx",
+          "columns": [
+            "expires_at",
+            "lease_token"
+          ],
+          "isUnique": false
+        },
+        "apple_owner_external_operation_leases_owner_principal_expiry_idx": {
+          "name": "apple_owner_external_operation_leases_owner_principal_expiry_idx",
+          "columns": [
+            "owner_id",
+            "apple_principal_id",
+            "expires_at"
+          ],
+          "isUnique": false
+        },
+        "apple_owner_external_operation_leases_apple_auth_principal_idx": {
+          "name": "apple_owner_external_operation_leases_apple_auth_principal_idx",
+          "columns": [
+            "owner_id",
+            "apple_principal_id"
+          ],
+          "isUnique": true,
+          "where": "\"apple_owner_external_operation_leases\".\"operation_kind\"='apple-auth'"
+        },
+        "apple_owner_external_operation_leases_origin_install_principal_idx": {
+          "name": "apple_owner_external_operation_leases_origin_install_principal_idx",
+          "columns": [
+            "owner_id",
+            "apple_principal_id"
+          ],
+          "isUnique": true,
+          "where": "\"apple_owner_external_operation_leases\".\"operation_kind\"='origin-install'"
+        },
+        "apple_owner_external_operation_leases_origin_resource_idx": {
+          "name": "apple_owner_external_operation_leases_origin_resource_idx",
+          "columns": [
+            "resource_id"
+          ],
+          "isUnique": true,
+          "where": "\"apple_owner_external_operation_leases\".\"operation_kind\" in ('origin','origin-install')"
+        },
+        "apple_owner_external_operation_leases_origin_install_owner_idx": {
+          "name": "apple_owner_external_operation_leases_origin_install_owner_idx",
+          "columns": [
+            "owner_id"
+          ],
+          "isUnique": true,
+          "where": "\"apple_owner_external_operation_leases\".\"operation_kind\"='origin-install'"
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "apple_owner_external_operation_leases_operation_check": {
+          "name": "apple_owner_external_operation_leases_operation_check",
+          "value": "\"apple_owner_external_operation_leases\".\"operation_kind\" in ('origin','github','apple-auth','origin-install') and length(\"apple_owner_external_operation_leases\".\"resource_id\") between 1 and 200"
+        },
+        "apple_owner_external_operation_leases_identity_check": {
+          "name": "apple_owner_external_operation_leases_identity_check",
+          "value": "(\"apple_owner_external_operation_leases\".\"apple_subject_hash\" is null and \"apple_owner_external_operation_leases\".\"apple_principal_id\" is null) or (\"apple_owner_external_operation_leases\".\"apple_subject_hash\" is not null and \"apple_owner_external_operation_leases\".\"apple_principal_id\" is not null)"
+        }
+      }
+    },
+    "files": {
+      "name": "files",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "path": {
+          "name": "path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "files_user_id_path_pk": {
+          "columns": [
+            "user_id",
+            "path"
+          ],
+          "name": "files_user_id_path_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "files_version_safe_check": {
+          "name": "files_version_safe_check",
+          "value": "\"files\".\"version\" between 0 and 9007199254740991"
+        }
+      }
+    },
+    "origin_auth_flows": {
+      "name": "origin_auth_flows",
+      "columns": {
+        "state_hash": {
+          "name": "state_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "return_to": {
+          "name": "return_to",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "consumed_at": {
+          "name": "consumed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "origin_auth_receipts": {
+      "name": "origin_auth_receipts",
+      "columns": {
+        "receipt_id": {
+          "name": "receipt_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "claimed_at": {
+          "name": "claimed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "origin_installation_receipt_fences": {
+      "name": "origin_installation_receipt_fences",
+      "columns": {
+        "installation_id": {
+          "name": "installation_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "issued_at_fence": {
+          "name": "issued_at_fence",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "origin_installation_receipt_fences_installation_check": {
+          "name": "origin_installation_receipt_fences_installation_check",
+          "value": "(substr(\"origin_installation_receipt_fences\".\"installation_id\",1,2)='i_' and length(\"origin_installation_receipt_fences\".\"installation_id\") between 10 and 102 and substr(\"origin_installation_receipt_fences\".\"installation_id\",3) not glob '*[^a-z0-9]*') or (substr(\"origin_installation_receipt_fences\".\"installation_id\",1,5)='inst_' and length(\"origin_installation_receipt_fences\".\"installation_id\") between 13 and 105 and substr(\"origin_installation_receipt_fences\".\"installation_id\",6) not glob '*[^a-z0-9]*')"
+        },
+        "origin_installation_receipt_fences_time_check": {
+          "name": "origin_installation_receipt_fences_time_check",
+          "value": "\"origin_installation_receipt_fences\".\"issued_at_fence\" between 0 and 9007199254740991"
+        }
+      }
+    },
+    "origin_installations": {
+      "name": "origin_installations",
+      "columns": {
+        "installation_id": {
+          "name": "installation_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "namespace_id": {
+          "name": "namespace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "origin_possible_installations": {
+      "name": "origin_possible_installations",
+      "columns": {
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scope_id": {
+          "name": "scope_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "apple_principal_id": {
+          "name": "apple_principal_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "apple_subject_hash": {
+          "name": "apple_subject_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "flow_token": {
+          "name": "flow_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "marked_at": {
+          "name": "marked_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "origin_possible_installations_subject_idx": {
+          "name": "origin_possible_installations_subject_idx",
+          "columns": [
+            "owner_id",
+            "apple_subject_hash"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "origin_possible_installations_owner_id_scope_id_pk": {
+          "columns": [
+            "owner_id",
+            "scope_id"
+          ],
+          "name": "origin_possible_installations_owner_id_scope_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "origin_possible_installations_hash_check": {
+          "name": "origin_possible_installations_hash_check",
+          "value": "((\"origin_possible_installations\".\"scope_id\"='host' and \"origin_possible_installations\".\"apple_principal_id\" is null and \"origin_possible_installations\".\"apple_subject_hash\" is null) or (\"origin_possible_installations\".\"scope_id\"=\"origin_possible_installations\".\"apple_principal_id\" and length(\"origin_possible_installations\".\"apple_principal_id\")=43 and length(\"origin_possible_installations\".\"apple_subject_hash\")=43)) and length(\"origin_possible_installations\".\"flow_token\")=43"
+        }
+      }
+    },
+    "receipts": {
+      "name": "receipts",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "payload": {
+          "name": "payload",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "receipts_user_id_id_pk": {
+          "columns": [
+            "user_id",
+            "id"
+          ],
+          "name": "receipts_user_id_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "sync_records": {
+      "name": "sync_records",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "workspace_id": {
+          "name": "workspace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "record_id": {
+          "name": "record_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "mutation_id": {
+          "name": "mutation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "envelope": {
+          "name": "envelope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "sync_records_user_id_workspace_id_record_id_pk": {
+          "columns": [
+            "user_id",
+            "workspace_id",
+            "record_id"
+          ],
+          "name": "sync_records_user_id_workspace_id_record_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "sync_records_revision_safe_check": {
+          "name": "sync_records_revision_safe_check",
+          "value": "\"sync_records\".\"revision\" between 0 and 9007199254740991"
+        }
+      }
+    },
+    "sync_workspace_epochs": {
+      "name": "sync_workspace_epochs",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "workspace_id": {
+          "name": "workspace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "incarnation": {
+          "name": "incarnation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "enrolled_at": {
+          "name": "enrolled_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "sync_workspace_epochs_incarnation_unique": {
+          "name": "sync_workspace_epochs_incarnation_unique",
+          "columns": [
+            "user_id",
+            "workspace_id",
+            "incarnation"
+          ],
+          "isUnique": true
+        },
+        "sync_workspace_epochs_owner_idx": {
+          "name": "sync_workspace_epochs_owner_idx",
+          "columns": [
+            "user_id",
+            "workspace_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "sync_workspace_epochs_user_id_workspaces_user_id_fk": {
+          "name": "sync_workspace_epochs_user_id_workspaces_user_id_fk",
+          "tableFrom": "sync_workspace_epochs",
+          "tableTo": "workspaces",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "sync_workspace_epochs_user_id_workspace_id_epoch_pk": {
+          "columns": [
+            "user_id",
+            "workspace_id",
+            "epoch"
+          ],
+          "name": "sync_workspace_epochs_user_id_workspace_id_epoch_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "sync_workspace_epochs_workspace_check": {
+          "name": "sync_workspace_epochs_workspace_check",
+          "value": "length(\"sync_workspace_epochs\".\"workspace_id\")=32 and \"sync_workspace_epochs\".\"workspace_id\" not glob '*[^A-Za-z0-9_-]*'"
+        },
+        "sync_workspace_epochs_epoch_check": {
+          "name": "sync_workspace_epochs_epoch_check",
+          "value": "length(\"sync_workspace_epochs\".\"epoch\") between 16 and 64 and \"sync_workspace_epochs\".\"epoch\" not glob '*[^A-Za-z0-9_-]*'"
+        },
+        "sync_workspace_epochs_incarnation_check": {
+          "name": "sync_workspace_epochs_incarnation_check",
+          "value": "length(\"sync_workspace_epochs\".\"incarnation\")=64 and \"sync_workspace_epochs\".\"incarnation\" not glob '*[^0-9a-f]*'"
+        }
+      }
+    },
+    "sync_workspaces": {
+      "name": "sync_workspaces",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "workspace_id": {
+          "name": "workspace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "incarnation": {
+          "name": "incarnation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recovery": {
+          "name": "recovery",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "sync_workspaces_user_id_workspace_id_pk": {
+          "columns": [
+            "user_id",
+            "workspace_id"
+          ],
+          "name": "sync_workspaces_user_id_workspace_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "sync_workspaces_incarnation_check": {
+          "name": "sync_workspaces_incarnation_check",
+          "value": "length(\"sync_workspaces\".\"incarnation\")=64 and \"sync_workspaces\".\"incarnation\" not glob '*[^0-9a-f]*'"
+        },
+        "sync_workspaces_revision_safe_check": {
+          "name": "sync_workspaces_revision_safe_check",
+          "value": "\"sync_workspaces\".\"revision\" between 0 and 9007199254740991"
+        }
+      }
+    },
+    "usage": {
+      "name": "usage",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "window": {
+          "name": "window",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "calls": {
+          "name": "calls",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "usage_user_id_window_pk": {
+          "columns": [
+            "user_id",
+            "window"
+          ],
+          "name": "usage_user_id_window_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "workspaces": {
+      "name": "workspaces",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "policy": {
+          "name": "policy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "completed": {
+          "name": "completed",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "file_clock": {
+          "name": "file_clock",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": -1
+        },
+        "file_clock_claim": {
+          "name": "file_clock_claim",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "workspaces_file_clock_safe_check": {
+          "name": "workspaces_file_clock_safe_check",
+          "value": "\"workspaces\".\"file_clock\" between -1 and 9007199254740991"
+        },
+        "workspaces_file_clock_claim_check": {
+          "name": "workspaces_file_clock_claim_check",
+          "value": "\"workspaces\".\"file_clock_claim\" is null or (length(\"workspaces\".\"file_clock_claim\")=43 and \"workspaces\".\"file_clock_claim\" not glob '*[^A-Za-z0-9_-]*')"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

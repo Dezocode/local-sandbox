@@ -1,0 +1,20 @@
+[
+  "Release version ownership",
+  "Release Python dependencies",
+  "Generated Xcode metadata",
+  "Release packager safety",
+  "GitHub release preflight contracts",
+  "Deterministic setup guide contracts",
+  "Committed release artifact freshness",
+  "Release qualification tracker",
+  "Lint",
+  "TypeScript",
+  "Node contracts",
+  "D1 storage contracts",
+  "Git worktree contracts",
+  "Production web build",
+  "Built worker integration",
+  "Static self-host reproducibility",
+  "Release capability contracts",
+  "Release artifact audit"
+]

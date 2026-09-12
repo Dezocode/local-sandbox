@@ -3,10 +3,22 @@
   "version": "0.3.0",
   "dataSchema": 2,
   "minimumIOS": "26.0",
-  "requestedValidation": ["iOS 26", "iOS 27.0", "iPhone 14 Pro", "Apple Intelligence capable iPhone"],
+  "requestedValidation": [
+    "iOS 26 deployment baseline",
+    "iOS 27.0",
+    "iPhone 18 Pro Max Foundation Models online and in Airplane Mode",
+    "explicitly selected lower-device native Shortcut fallback"
+  ],
   "nativeDeviceValidation": "pending",
   "channels": {"web": "versioned private deployment", "native": "signed Xcode, TestFlight, or App Store build", "shortcuts": "reviewed iCloud share links"},
-  "changes": ["System light/dark glass navigation", "App subscription Shortcuts providers", "GitHub branch sync and worktree patches", "Persistent native app-handoff checkpoints"],
+  "changes": [
+    "Standalone and linked Sign in with Apple, plus nonce-bound native bearer exchange",
+    "Manual encrypted workspace sync with recovery and bounded snapshot pagination",
+    "Journal-first autosave for the dashboard, local vault, and native editor",
+    "Direct and proxied GitHub review with non-force commits",
+    "Hosted Cursor Origin repository discovery and manual mirror refresh",
+    "Bounded Apple Intelligence background continuation with review-only recovery"
+  ],
   "source": "/downloads/Local-Sandbox-Source.zip",
   "guide": "/downloads/Local-Sandbox-Setup-Guide.pdf"
 }

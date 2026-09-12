@@ -1,4 +1,4 @@
-const CACHE='local-sandbox-shell-0.3.0-build4';const SHELL=['./index.html','./style.css','./app.js','./vault.js','./install.html','./packages.js','./manifest.json','./icon.png'];
+const CACHE='local-sandbox-shell-0.3.0-build10';const SHELL=['./index.html','./style.css','./app.js','./capabilities.js','./capabilities.json','./local-autosave.js','./draft-journal.js','./storage.js','./vault.js','./github.js','./origin.js','./workspace-sync.js','./install.html','./packages.js','./manifest.json','./icon.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL))));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('local-sandbox-shell-')&&k!==CACHE).map(k=>caches.delete(k))))));
 self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;const url=new URL(event.request.url);if(url.origin!==self.location.origin||!SHELL.some(p=>new URL(p,self.registration.scope).pathname===url.pathname))return;event.respondWith(caches.match(event.request).then(c=>c||fetch(event.request)))});

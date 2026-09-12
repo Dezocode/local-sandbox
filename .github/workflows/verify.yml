@@ -8,20 +8,38 @@ jobs:
   web-contracts:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
       - run: corepack enable
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec tsc --noEmit
-      - run: node --experimental-strip-types --test tests/contracts.test.ts tests/integrations.test.ts tests/vault.test.mjs tests/packages.test.mjs
-      - run: python3 tests/storage.test.py
-      - run: python3 tests/worktree.test.py
+      - run: npm run install:ci
+      - name: Install deterministic release artifact dependencies
+        run: python3 -m pip install --disable-pip-version-check --no-input 'pillow==12.3.0' 'reportlab==4.4.9' 'pypdf==6.10.0'
+      - name: Run portable web contract suites
+        run: node scripts/verify-release.mjs --portable-web-only
   native:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+      - run: corepack enable
+      - name: Install deterministic dependencies
+        run: npm run install:ci
+      - name: Install deterministic release artifact dependencies
+        run: python3 -m pip install --disable-pip-version-check --no-input 'pillow==12.3.0' 'reportlab==4.4.9' 'pypdf==6.10.0'
+      - name: Run canonical full verification
+        env:
+          LOCAL_SANDBOX_RELEASE_PYTHON: python3
+        run: pnpm run verify
       - name: Show installed Apple toolchain
         run: xcodebuild -version && xcodebuild -showsdks
       - name: Compile native app

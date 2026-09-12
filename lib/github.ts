@@ -3,10 +3,14 @@ import { branchSchema,repoPathSchema,repositorySchema } from './integrations.ts'
 export const gitTarget=z.object({repository:repositorySchema,branch:branchSchema,path:repoPathSchema}).strict();
 export const snapshotSchema=z.object({commit:z.string().regex(/^[a-f0-9]{40}$/),content:z.string().nullable(),sha:z.string().nullable()});
 export type Snapshot=z.infer<typeof snapshotSchema>;
+export const fineGrainedGitHubTokenSchema=z.string().regex(
+ /^github_pat_[A-Za-z0-9_]{20,480}$/,
+ 'Enter a fine-grained personal access token beginning with github_pat_.',
+);
 const refSchema=z.object({object:z.object({sha:z.string().regex(/^[a-f0-9]{40}$/)})});
 const shaSchema=z.object({sha:z.string().regex(/^[a-f0-9]{40}$/)});
 type Transport=(path:string,method?:string,body?:unknown)=>Promise<unknown>;
-export function githubClient(token:string):Transport {return async(path,method='GET',body)=>{
+export function githubClient(rawToken:string):Transport {const token=fineGrainedGitHubTokenSchema.parse(rawToken);return async(path,method='GET',body)=>{
  const response=await fetch('https://api.github.com'+path,{method,headers:{Authorization:`Bearer ${token}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'Local-Sandbox','Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),redirect:'error',signal:AbortSignal.timeout(20000)});
  if(!response.ok)throw new Error(response.status===401?'GitHub authentication expired. Reconnect in Settings.':response.status===404?'Repository, branch, or permission not found. Check the saved target.':response.status===409||response.status===422?'GitHub changed while syncing. Compare again; nothing was force-pushed.':`GitHub request failed (${response.status}).`);
  return response.json();

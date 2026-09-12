@@ -11,14 +11,23 @@ protocol StepProvider { func step(goal: String, capsule: String, latest: String,
 struct AppleProvider: StepProvider {
     func step(goal: String, capsule: String, latest: String, policy: ResourcePolicy) async throws -> String {
         guard case .available = SystemLanguageModel.default.availability else { throw SandboxError.blocked("APPLE_INTELLIGENCE_UNAVAILABLE: Enable Apple Intelligence on a supported device.") }
+        guard policy.contextChars <= ProviderQualificationSnapshot.appleMaximumContextCharacters else {
+            throw SandboxError.blocked("APPLE_CONTEXT_CAP_EXCEEDED: Apple Intelligence tasks support at most 6000 prompt characters in this release. Lower the saved cap or select a qualified external provider.")
+        }
         // New session per step bounds retained history. Text cap is a proxy; token overflow is handled as an error.
         let session = LanguageModelSession(instructions: nativeOraclePolicy)
-        let result = try await session.respond(to: boundedPrompt(goal: goal, capsule: capsule, latest: latest, limit: min(policy.contextChars, 6000)))
+        let result = try await session.respond(to: boundedPrompt(goal: goal, capsule: capsule, latest: latest, limit: policy.contextChars))
+        return result.content
+    }
+
+    func qualificationResponse(prompt: String) async throws -> String {
+        guard case .available = SystemLanguageModel.default.availability else { throw SandboxError.blocked("APPLE_INTELLIGENCE_UNAVAILABLE: Enable Apple Intelligence on a supported device.") }
+        guard prompt.count <= ProviderQualificationSnapshot.appleMaximumContextCharacters else {
+            throw SandboxError.invalid("APPLE_QUALIFICATION_PROMPT_EXCEEDS_RUNTIME_CAP")
+        }
+        let session = LanguageModelSession(instructions: nativeOraclePolicy)
+        let result = try await session.respond(to: prompt)
         return result.content
     }
 }
 extension ToolName {static var allNames:[String]{[read,list,create,append,patch,clipboardGet,clipboardSet,notify].map(\.rawValue)}}
-func boundedPrompt(goal:String,capsule:String,latest:String,limit:Int)->String {
-    let header="Goal: \(goal.prefix(2000))\nState: \(capsule.prefix(1800))\nLatest result:\n"
-    return String((header+latest.prefix(max(0,limit-header.count))).prefix(limit))
-}

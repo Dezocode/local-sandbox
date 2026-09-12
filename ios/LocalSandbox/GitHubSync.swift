@@ -1,7 +1,13 @@
 import SwiftUI
 
-private final class GitHubNoRedirect: NSObject, URLSessionTaskDelegate {
-    func urlSession(_ session:URLSession,task:URLSessionTask,willPerformHTTPRedirection response:HTTPURLResponse,newRequest request:URLRequest,completionHandler:@escaping (URLRequest?)->Void){completionHandler(nil)}
+struct GitHubFineGrainedCredential: Equatable {
+    let rawValue: String
+    init(_ rawValue: String) throws {
+        guard rawValue.range(of: "^github_pat_[A-Za-z0-9_]{20,480}$", options: .regularExpression) != nil else {
+            throw SandboxError.invalid("Enter a fine-grained personal access token beginning with github_pat_.")
+        }
+        self.rawValue = rawValue
+    }
 }
 
 struct GitHubTarget: Codable, Equatable {
@@ -18,16 +24,20 @@ struct GitHubTarget: Codable, Equatable {
 }
 struct GitHubSnapshot {let commit:String;let sha:String?;let content:String?}
 @MainActor struct GitHubClient {
-    let token:String
+    private let credential:GitHubFineGrainedCredential
+    private let transport:any GitHubHTTPPerforming
+    init(token:String,transport:any GitHubHTTPPerforming=GitHubURLSessionTransport()) throws {credential=try GitHubFineGrainedCredential(token);self.transport=transport}
+    init(credential:GitHubFineGrainedCredential,transport:any GitHubHTTPPerforming=GitHubURLSessionTransport()){self.credential=credential;self.transport=transport}
     func request(_ path:String,method:String="GET",body:[String:Any]?=nil) async throws -> [String:Any] {
         guard let url=URL(string:"https://api.github.com"+path),url.host=="api.github.com" else {throw SandboxError.invalid("Invalid GitHub URL.")}
         var request=URLRequest(url:url);request.httpMethod=method;request.timeoutInterval=25
-        request.setValue("Bearer \(token)",forHTTPHeaderField:"Authorization");request.setValue("application/vnd.github+json",forHTTPHeaderField:"Accept");request.setValue("2022-11-28",forHTTPHeaderField:"X-GitHub-Api-Version");request.setValue("Local-Sandbox",forHTTPHeaderField:"User-Agent")
+        request.setValue("Bearer \(credential.rawValue)",forHTTPHeaderField:"Authorization");request.setValue("application/vnd.github+json",forHTTPHeaderField:"Accept");request.setValue("2022-11-28",forHTTPHeaderField:"X-GitHub-Api-Version");request.setValue("Local-Sandbox",forHTTPHeaderField:"User-Agent")
         if let body{request.setValue("application/json",forHTTPHeaderField:"Content-Type");request.httpBody=try JSONSerialization.data(withJSONObject:body)}
-        let session=URLSession(configuration:.ephemeral,delegate:GitHubNoRedirect(),delegateQueue:nil)
-        defer{session.invalidateAndCancel()}
-        let (data,response)=try await session.data(for:request)
-        guard let http=response as? HTTPURLResponse,(200...299).contains(http.statusCode),let object=try JSONSerialization.jsonObject(with:data) as? [String:Any] else {throw SandboxError.blocked("GitHub could not complete this operation. Check access or compare again. No force push is used.")}
+        let result:GitHubHTTPResult
+        do {result=try await transport.perform(request,maximumResponseBytes:GitHubTransportLimits.responseBytes)}
+        catch is CancellationError {throw CancellationError()}
+        catch {throw SandboxError.blocked("GitHub could not complete this operation. Check access or compare again. No force push is used.")}
+        guard let object=try JSONSerialization.jsonObject(with:result.data) as? [String:Any] else {throw SandboxError.blocked("GitHub could not complete this operation. Check access or compare again. No force push is used.")}
         return object
     }
     func login() async throws -> String {let user=try await request("/user");guard let name=user["login"] as? String else{throw SandboxError.invalid("GitHub did not return an account.")};return name}
@@ -77,9 +87,9 @@ struct GitHubSettingsView:View {
     var body:some View {
         Form {
             Section("GitHub account") {
-                if login.isEmpty {SecureField("Fine-grained token",text:$token).textInputAutocapitalization(.never).autocorrectionDisabled();Button("Connect GitHub"){perform{let name=try await GitHubClient(token:token).login();try Keychain.set(token,for:"githubToken");login=name;token=""}};Link("Create repository-scoped token",destination:URL(string:"https://github.com/settings/personal-access-tokens/new")!)}
-                else {Label(login,systemImage:"person.crop.circle.badge.checkmark");Button("Disconnect",role:.destructive){Keychain.delete("githubToken");login="";snapshot=nil}}
-                Text("Grant Contents read/write for the selected repository. This token stays in this device’s Keychain. Model subscriptions stay in their own apps.").font(.footnote).foregroundStyle(.secondary)
+                if login.isEmpty {SecureField("Fine-grained token",text:$token).textInputAutocapitalization(.never).autocorrectionDisabled();Button("Connect GitHub"){perform{let credential=try GitHubFineGrainedCredential(token);let name=try await GitHubClient(credential:credential).login();try Keychain.set(credential.rawValue,for:"githubToken");login=name;token=""}};Link("Create 30-day repository-scoped token",destination:URL(string:"https://github.com/settings/personal-access-tokens/new?name=Local%20Sandbox&description=Repository-scoped%20file%20sync&expires_in=30&contents=write")!)}
+                else {Label(login,systemImage:"person.crop.circle.badge.checkmark");Button("Disconnect",role:.destructive){perform{try GitHubCredentialDisconnect(deleteChecked:{try Keychain.deleteChecked("githubToken")},readChecked:{try Keychain.getChecked("githubToken")}).perform();login="";snapshot=nil}}}
+                Text("Select only the repository you will sync. Contents write includes read access. This token stays in this device’s Keychain. Model subscriptions stay in their own apps.").font(.footnote).foregroundStyle(.secondary)
             }
             Section("Worktree target") {TextField("owner/repository",text:$target.repository);TextField("Existing branch",text:$target.branch);TextField("Repository file path",text:$target.path);TextField("Local sandbox path",text:$localPath);Button("Save target"){do{let value=try target.validated();UserDefaults.standard.set(try JSONEncoder().encode(value),forKey:"githubTarget")}catch{model.error=error.localizedDescription}}}.textInputAutocapitalization(.never).autocorrectionDisabled()
             Section("Compare before publishing") {

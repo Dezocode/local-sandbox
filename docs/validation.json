@@ -1,46 +1,243 @@
 {
-  "date": "2026-09-10T19:18:51.482854+00:00",
-  "contractTests": {
-    "passed": 20,
-    "failed": 0
-  },
-  "storageQueries": {
-    "passed": 6,
+  "recordType": "local-sandbox-release-validation",
+  "schemaVersion": 1,
+  "version": "0.3.0",
+  "generatedAt": "2026-09-12T09:18:19.045Z",
+  "candidateDigest": "51820b6cedabb4b8b29280c796034b6ee10547101682fdcd07a559679a8ee602",
+  "automatedVerification": {
+    "status": "passed",
     "checks": [
-      "Source queries isolate file reads by owner",
-      "File compare-and-swap rejects stale revision",
-      "Policy compare-and-swap rejects stale authorization",
-      "Create does not overwrite an existing file",
-      "Receipt IDs cannot overwrite prior evidence",
-      "Retired model API endpoint cannot spend API credits"
+      {
+        "label": "Release version ownership",
+        "durationMs": 34,
+        "status": "passed"
+      },
+      {
+        "label": "Release Python dependencies",
+        "durationMs": 67,
+        "status": "passed"
+      },
+      {
+        "label": "Generated Xcode metadata",
+        "durationMs": 60,
+        "status": "passed"
+      },
+      {
+        "label": "Release packager safety",
+        "durationMs": 1033,
+        "status": "passed"
+      },
+      {
+        "label": "GitHub release preflight contracts",
+        "durationMs": 40171,
+        "status": "passed"
+      },
+      {
+        "label": "Deterministic setup guide contracts",
+        "durationMs": 2539,
+        "status": "passed"
+      },
+      {
+        "label": "Committed release artifact freshness",
+        "durationMs": 2074,
+        "status": "passed"
+      },
+      {
+        "label": "Release qualification tracker",
+        "durationMs": 1361,
+        "status": "passed",
+        "tracker": {
+          "evidenceSha256": "0df60ba737ce196650b50f9cda4175026e0a2435340476d0e5aabb60099f5866",
+          "path": "qualification/Local-Sandbox-0.3-Progress.xlsx",
+          "requirementsSha256": "e9f9ec845ab10b99756adf7658e6ac80aa010f8d687b9e82aeb759fad7851f77",
+          "sha256": "f0f3053324d13edea6df81d9ae02d1b4a942b9d0533c08cc244a05bb962c3e8f",
+          "snapshotPath": "qualification/Local-Sandbox-0.3-Progress.snapshot.json",
+          "snapshotSha256": "f31d67ac605314e87929a94b1d3d1fc9632969e009fe0c2e5a1f01d082ed71aa"
+        }
+      },
+      {
+        "label": "Lint",
+        "durationMs": 7402,
+        "status": "passed"
+      },
+      {
+        "label": "TypeScript",
+        "durationMs": 1816,
+        "status": "passed"
+      },
+      {
+        "label": "Node contracts",
+        "durationMs": 13234,
+        "status": "passed"
+      },
+      {
+        "label": "D1 storage contracts",
+        "durationMs": 33,
+        "status": "passed"
+      },
+      {
+        "label": "Git worktree contracts",
+        "durationMs": 290,
+        "status": "passed"
+      },
+      {
+        "label": "Swift parser",
+        "durationMs": 73,
+        "status": "passed"
+      },
+      {
+        "label": "Native core compile",
+        "durationMs": 2985,
+        "status": "passed"
+      },
+      {
+        "label": "Native core contracts",
+        "durationMs": 751,
+        "status": "passed"
+      },
+      {
+        "label": "Native execution core compile",
+        "durationMs": 2791,
+        "status": "passed"
+      },
+      {
+        "label": "Native execution core contracts",
+        "durationMs": 225,
+        "status": "passed"
+      },
+      {
+        "label": "Provider qualification strict typecheck",
+        "durationMs": 1227,
+        "status": "passed"
+      },
+      {
+        "label": "Provider qualification contracts compile",
+        "durationMs": 3326,
+        "status": "passed"
+      },
+      {
+        "label": "Provider qualification contracts",
+        "durationMs": 207,
+        "status": "passed"
+      },
+      {
+        "label": "Shortcut package core compile",
+        "durationMs": 652,
+        "status": "passed"
+      },
+      {
+        "label": "Shortcut package core contracts",
+        "durationMs": 192,
+        "status": "passed"
+      },
+      {
+        "label": "Workspace crypto compile",
+        "durationMs": 2420,
+        "status": "passed"
+      },
+      {
+        "label": "Workspace crypto interoperability",
+        "durationMs": 1403,
+        "status": "passed"
+      },
+      {
+        "label": "Native account and sync compile",
+        "durationMs": 8264,
+        "status": "passed"
+      },
+      {
+        "label": "Native account and sync contracts",
+        "durationMs": 1231,
+        "status": "passed"
+      },
+      {
+        "label": "Native autosave compile",
+        "durationMs": 2370,
+        "status": "passed"
+      },
+      {
+        "label": "Native autosave contracts",
+        "durationMs": 210,
+        "status": "passed"
+      },
+      {
+        "label": "Recursive sandbox compile",
+        "durationMs": 2044,
+        "status": "passed"
+      },
+      {
+        "label": "Recursive sandbox contracts",
+        "durationMs": 192,
+        "status": "passed"
+      },
+      {
+        "label": "Workspace preparation compile",
+        "durationMs": 2209,
+        "status": "passed"
+      },
+      {
+        "label": "Workspace preparation contracts",
+        "durationMs": 193,
+        "status": "passed"
+      },
+      {
+        "label": "GitHub transport compile",
+        "durationMs": 2124,
+        "status": "passed"
+      },
+      {
+        "label": "GitHub transport contracts",
+        "durationMs": 212,
+        "status": "passed"
+      },
+      {
+        "label": "Apple metadata",
+        "durationMs": 4,
+        "status": "passed"
+      },
+      {
+        "label": "Production web build",
+        "durationMs": 4433,
+        "status": "passed"
+      },
+      {
+        "label": "Built worker integration",
+        "durationMs": 8250,
+        "status": "passed"
+      },
+      {
+        "label": "Static self-host reproducibility",
+        "durationMs": 421,
+        "status": "passed"
+      },
+      {
+        "label": "Release capability contracts",
+        "durationMs": 33,
+        "status": "passed"
+      },
+      {
+        "label": "Release artifact audit",
+        "durationMs": 680,
+        "status": "passed"
+      }
     ]
   },
-  "webBuild": "passed",
-  "typecheck": "passed",
-  "pdf": {
-    "pages": 26,
-    "rendered": true,
-    "visuallyInspected": "changed pages 23-26; existing template retained"
-  },
-  "xcodeProjectStructure": "11 Swift app files and one native test source; uncompiled",
-  "workerIntegration": "not completed: environment cancelled network approval while starting local workerd",
-  "nativeCompilation": "not performed: Apple SDK and Xcode unavailable",
-  "nativeDeviceTests": "not performed",
-  "webmcpRuntime": "not tested: no permitted supported browser context",
-  "appleSignIn": "not tested",
-  "githubPublication": "not performed: target repository returned 404; repository-creation tool and authenticated CLI unavailable",
-  "appStore": "not submitted",
-  "version": "0.3.0",
-  "worktreeTests": {
-    "passed": 8,
-    "failed": 0,
-    "environment": "real temporary Git repository; offline"
-  },
-  "gitHubLiveSync": "not tested: user repository token not configured",
-  "appShortcuts": "Missing adapter runs guarded by user-reported setup; no published provider installers bundled",
-  "ios27": "explicit acceptance target; Apple SDK and physical device unavailable",
-  "localWebApp": "Crypto and backup schema tests passed; JS syntax valid; IndexedDB, service worker and iPhone installation not exercised in browser",
-  "buildNumber": 4,
-  "packageInstaller": "Catalog validation/order tests passed; real packages await exported Apple workflows and signing",
-  "publishingAutomation": "Python syntax checked; macOS commands, GitHub workflow and Docker deployment not executed"
+  "qualifications": {
+    "releaseState": "QUALIFYING. Automated checks do not qualify external services or release channels.",
+    "xcodeIOSBuild": "Full Xcode app and simulator builds are not run by the portable verifier. Run native CI and verify again on the release Mac.",
+    "physicalIPhone": "signing, installation, iOS 26 and iOS 27 behavior, iPhone 18 Pro Max on-device Foundation Models, lower-device Shortcut fallback, device lifecycle, and hardware acceptance are not run by the portable verifier",
+    "liveAppleSignIn": "web standalone, link, refresh, conflict, and revocation flows are not run without production Apple identifiers, secrets, domain, and accounts",
+    "liveAppleNativeExchange": "native nonce exchange, bearer expiry, revocation, and device lifecycle are not run against the production Apple and hosted services",
+    "nativeDeviceProtection": "Face ID, passcode, locked-device files, Files-provider protection, and iCloud Keychain recovery require physical-device qualification",
+    "liveEncryptedSync": "cross-device recovery, pagination under live mutation, conflict review, key loss, and service transport are not run against production accounts",
+    "nativeBackgroundProcessing": "BGProcessingTask scheduling, expiration, lock deferral, resubmission, and exactly-once completion require physical-device qualification",
+    "providerShortcuts": "portable checks cover the five-probe verifier, device-local signed-ledger types, deterministic ranking, strict routing receipts, and eight provider selections; iPhone 18 Pro Max offline Foundation Models, lower-device Siri/App Shortcut discovery, provider-owned app sessions/actions, daily probe timing, signed Shortcut packages, text return, and foreground handoff still require installed signed device builds",
+    "liveGitHubSync": "dashboard proxy, direct browser access, native access, and non-force writes are not run with a live repository token",
+    "liveCursorOrigin": "installation, repository discovery, mirror refresh, and disconnect are not run without production Cursor application credentials and a permitted repository",
+    "browserLifecycle": "Safari Home Screen installation, persistence, suspend and resume, offline behavior, quota failure, and multi-tab recovery require target-device testing",
+    "staticSelfHostDeployment": "archive contracts do not replace an HTTPS deployment smoke test of the generated static self-host package",
+    "accessibilityAndDeviceMatrix": "VoiceOver, Dynamic Type, landscape, iPad, touch targets, and the requested device matrix require real UI testing",
+    "githubRelease": "source publication and release workflow configuration are not performed by verification",
+    "appStoreAndTestFlight": "archive upload, TestFlight acceptance, metadata, submission, and App Review are not performed by verification"
+  }
 }

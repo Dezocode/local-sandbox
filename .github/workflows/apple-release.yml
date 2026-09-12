@@ -2,6 +2,15 @@ name: Package native release
 on:
   workflow_dispatch:
     inputs:
+      release_commit:
+        description: Full 40-character commit SHA selected from main for this release
+        required: true
+        type: string
+      release_version:
+        description: Exact package version at release_commit
+        required: true
+        default: 0.3.0
+        type: string
       stage:
         description: Archive locally or upload a signed build to App Store Connect
         required: true
@@ -10,48 +19,152 @@ on:
         options: [archive, upload]
 permissions:
   contents: read
+concurrency:
+  group: apple-release-${{ github.repository }}-${{ inputs.release_version }}
+  cancel-in-progress: false
 jobs:
   apple:
     if: github.ref == 'refs/heads/main'
-    runs-on: macos-latest
+    runs-on: xcode-27
     environment: apple-release
+    timeout-minutes: 90
     env:
-      LS_APPLE_TEAM: ${{ vars.APPLE_TEAM_ID }}
-      LS_BUNDLE_ID: ${{ vars.APPLE_BUNDLE_ID }}
-      LS_ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-      LS_ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      LS_RELEASE_COMMIT: ${{ inputs.release_commit }}
+      LS_RELEASE_VERSION: ${{ inputs.release_version }}
       LS_STAGE: ${{ inputs.stage }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Materialize temporary Apple API key
+      - name: Check out the explicit release commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ inputs.release_commit }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Select Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - name: Select Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+      - name: Verify the release identity and derive the build number
+        id: release
+        env:
+          LS_TRIGGER_COMMIT: ${{ github.sha }}
+        run: |
+          node scripts/release/apple_ci.mjs prepare \
+            --release-commit "$LS_RELEASE_COMMIT" \
+            --trigger-commit "$LS_TRIGGER_COMMIT" \
+            --release-version "$LS_RELEASE_VERSION" \
+            --run-number "$GITHUB_RUN_NUMBER" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --github-env "$GITHUB_ENV" \
+            --github-output "$GITHUB_OUTPUT"
+      - name: Verify the exact Apple release toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOCAL_SANDBOX_XCODE_OUTPUT=$(xcodebuild -version)
+          if [[ "$LOCAL_SANDBOX_XCODE_OUTPUT" != $'Xcode 27.0\nBuild version 27A266a' ]]; then
+            printf 'Archive/upload requires Xcode 27.0 build 27A266a. Runner reported:\n%s\n' \
+              "$LOCAL_SANDBOX_XCODE_OUTPUT" >&2
+            exit 1
+          fi
+          printf '%s\n' "$LOCAL_SANDBOX_XCODE_OUTPUT"
+          printf 'LS_XCODE_VERSION=27.0\nLS_XCODE_BUILD=27A266a\n' >> "$GITHUB_ENV"
+          xcodebuild -showsdks
+      - name: Install locked release dependencies
+        run: |
+          corepack enable
+          npm run install:ci
+          python3 -m pip install --disable-pip-version-check --no-input \
+            'pillow==12.3.0' 'reportlab==4.4.9' 'pypdf==6.10.0'
+      - name: Run canonical full verification
+        env:
+          LOCAL_SANDBOX_RELEASE_PYTHON: python3
+        run: pnpm run verify
+      - name: Run native simulator regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOCAL_SANDBOX_SIMULATOR=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; data=json.load(sys.stdin); devices=[device["udid"] for runtime,items in data["devices"].items() if "iOS-26" in runtime or "iOS-27" in runtime for device in items if "iPhone" in device["name"]]; print(devices[0] if devices else "")')
+          test -n "$LOCAL_SANDBOX_SIMULATOR"
+          python3 scripts/release/apple.py test --simulator "$LOCAL_SANDBOX_SIMULATOR"
+      - name: Validate release evidence
+        run: |
+          node scripts/release/apple_ci.mjs validate \
+            --release-commit "$LS_RELEASE_COMMIT" \
+            --release-version "$LS_RELEASE_VERSION" \
+            --build-number "$LS_BUILD_NUMBER" \
+            --stage "$LS_STAGE" \
+            --xcode-version "$LS_XCODE_VERSION" \
+            --xcode-build "$LS_XCODE_BUILD" \
+            --validation docs/validation.json \
+            --evidence release-output/apple-release-evidence.json
+      - name: Validate protected Apple action readiness
+        env:
+          LS_APPLE_ACTION_READINESS_JSON: ${{ secrets.APPLE_ACTION_READINESS_JSON }}
+        run: |
+          node scripts/release/apple_ci.mjs readiness \
+            --release-commit "$LS_RELEASE_COMMIT" \
+            --release-version "$LS_RELEASE_VERSION" \
+            --build-number "$LS_BUILD_NUMBER" \
+            --stage "$LS_STAGE" \
+            --xcode-version "$LS_XCODE_VERSION" \
+            --xcode-build "$LS_XCODE_BUILD" \
+            --validation docs/validation.json \
+            --evidence release-output/apple-release-evidence.json \
+            --receipt release-output/apple-action-readiness-receipt.json
+      - name: Materialize the temporary Apple API key
         env:
           LS_ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          LS_ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          LS_ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
         run: |
           python3 - <<'PY'
-          import os,pathlib
-          key=os.environ['LS_ASC_KEY_P8']
-          if not key.startswith('-----BEGIN PRIVATE KEY-----'):raise SystemExit('Configure the App Store Connect API key secrets.')
-          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'LocalSandbox-AuthKey.p8'
-          path.write_text(key);path.chmod(0o600)
-          with open(os.environ['GITHUB_ENV'],'a') as f:f.write('LS_ASC_KEY_PATH='+str(path)+'\n')
+          import os, pathlib, re
+          key = os.environ['LS_ASC_KEY_P8'].strip()
+          key_id = os.environ['LS_ASC_KEY_ID']
+          issuer_id = os.environ['LS_ASC_ISSUER_ID']
+          if not key.startswith('-----BEGIN PRIVATE KEY-----') or not key.endswith('-----END PRIVATE KEY-----'):
+              raise SystemExit('Configure a valid App Store Connect API private key.')
+          if not re.fullmatch(r'[A-Z0-9]{10}', key_id):
+              raise SystemExit('ASC_KEY_ID must contain 10 uppercase letters or digits.')
+          if not re.fullmatch(r'[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}', issuer_id):
+              raise SystemExit('ASC_ISSUER_ID must be a UUID.')
+          key_path = pathlib.Path(os.environ['RUNNER_TEMP']) / 'LocalSandbox-AuthKey.p8'
+          descriptor = os.open(key_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+          with os.fdopen(descriptor, 'w') as handle:
+              handle.write(key + '\n')
+          with open(os.environ['GITHUB_ENV'], 'a') as environment:
+              environment.write(f'LS_ASC_KEY_PATH={key_path}\n')
           PY
-      - name: Run native regression tests
-        run: |
-          LS_SIMULATOR=$(xcrun simctl list devices available -j | python3 -c 'import json,sys;d=json.load(sys.stdin);a=[v["udid"] for k,vs in d["devices"].items() if "iOS-26" in k or "iOS-27" in k for v in vs if "iPhone" in v["name"]];print(a[0] if a else "")')
-          test -n "$LS_SIMULATOR"
-          python3 scripts/release/apple.py test --simulator "$LS_SIMULATOR"
       - name: Archive or upload
-        run: python3 scripts/release/apple.py "$LS_STAGE" --team "$LS_APPLE_TEAM" --bundle-id "$LS_BUNDLE_ID" --build-number "$GITHUB_RUN_NUMBER"
+        env:
+          LS_APPLE_TEAM: ${{ vars.APPLE_TEAM_ID }}
+          LS_BUNDLE_ID: ${{ vars.APPLE_BUNDLE_ID }}
+          LS_ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          LS_ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          LS_APPLE_ACTION_READINESS_JSON: ${{ secrets.APPLE_ACTION_READINESS_JSON }}
+        run: >-
+          python3 scripts/release/apple.py "$LS_STAGE"
+          --team "$LS_APPLE_TEAM"
+          --bundle-id "$LS_BUNDLE_ID"
+          --build-number "$LS_BUILD_NUMBER"
+          --release-commit "$LS_RELEASE_COMMIT"
+          --release-version "$LS_RELEASE_VERSION"
       - name: Remove signing key
         if: always()
         run: |
           python3 - <<'PY'
-          import pathlib,os
-          (pathlib.Path(os.environ['RUNNER_TEMP'])/'LocalSandbox-AuthKey.p8').unlink(missing_ok=True)
+          import os, pathlib
+          (pathlib.Path(os.environ['RUNNER_TEMP']) / 'LocalSandbox-AuthKey.p8').unlink(missing_ok=True)
           PY
-      - uses: actions/upload-artifact@v4
+      - name: Retain the signed release evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: success()
         with:
-          name: Local-Sandbox-Apple-Release
+          name: Local-Sandbox-${{ inputs.release_version }}-${{ steps.release.outputs.build_number }}-${{ inputs.stage }}
           path: release-output/
+          if-no-files-found: error
           retention-days: 7
