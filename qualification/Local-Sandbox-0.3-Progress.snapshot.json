@@ -1,0 +1,578 @@
+{
+  "evidence": {
+    "rows": 48,
+    "sha256": "4e5172f9ad2277097fee3edc38d0deadaa498f6271cb0a0cf1597105673830d2"
+  },
+  "gates": [
+    {
+      "dependencies": [],
+      "evidenceSha256": "0b734e54a8d84a4a66e4cf63a28c2b0fb0fab1e29f965faa76122f0a53d68d91",
+      "id": "GOV-01",
+      "status": "PASS"
+    },
+    {
+      "dependencies": [
+        "GOV-01"
+      ],
+      "evidenceSha256": "1d4f738188087bea367cbc5854aa9b8ff17b716860a473797bc152e1e7f0d9fb",
+      "id": "SRC-01",
+      "status": "PASS"
+    },
+    {
+      "dependencies": [
+        "SRC-01"
+      ],
+      "evidenceSha256": "1db29058cf6150f0da3d48c704a4f86ecfc6483266814adda1d34f3901853f9c",
+      "id": "SRC-02",
+      "status": "BLOCKED"
+    },
+    {
+      "dependencies": [
+        "SRC-01"
+      ],
+      "evidenceSha256": "91273bbcc85b86d2c1a1eee16affa7431432e9d4183c67be895b29359007521a",
+      "id": "SRC-03",
+      "status": "PASS"
+    },
+    {
+      "dependencies": [
+        "SRC-03"
+      ],
+      "evidenceSha256": "91955e9fc3cd6b2ebea127cc5ffa96752edc7166b2df0083988d0365e634a422",
+      "id": "VER-01",
+      "status": "PASS"
+    },
+    {
+      "dependencies": [],
+      "evidenceSha256": "bf3b6fd9f6c44f56baa3aa86ecf5c1e73e5113885618ff6becbb7c8a608f0a68",
+      "id": "ENV-00",
+      "status": "PASS"
+    },
+    {
+      "dependencies": [
+        "ENV-00"
+      ],
+      "evidenceSha256": "9df19bd1ea54b8139d0a9ef619b25fde951b19e3129f4ed4480721943353a48a",
+      "id": "ENV-01",
+      "status": "PASS"
+    },
+    {
+      "dependencies": [
+        "ENV-01",
+        "SRC-01"
+      ],
+      "evidenceSha256": "3d994e39f6554e0f3a8b411b0de9849f10f666dcbe14443eacb6f1d4b37b5721",
+      "id": "ENV-02",
+      "status": "BLOCKED"
+    },
+    {
+      "dependencies": [
+        "ENV-01"
+      ],
+      "evidenceSha256": "55cb3cd83ab7cb6e6dfbaa07c66a7d0d8610a53b0bf43163d4cdf9197698e1e5",
+      "id": "ENV-03",
+      "status": "BLOCKED"
+    },
+    {
+      "dependencies": [
+        "ENV-01",
+        "SRC-01"
+      ],
+      "evidenceSha256": "eabcd3e4e6787225fd08313749249a5cc26a37f8ba80e6d276db7d6c6483a046",
+      "id": "ENV-04",
+      "status": "BLOCKED"
+    },
+    {
+      "dependencies": [
+        "SRC-03"
+      ],
+      "evidenceSha256": "b66be81ebbd554540f3c5eb6b647924e5442af1db17ac5b18ddbe997b86e3623",
+      "id": "BASE-01",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "SRC-01"
+      ],
+      "evidenceSha256": "d3c6ea4f84dc47de5ccf3e4f0325a08a8d2b4b2637cf4b3a6d11a0d05480c1fb",
+      "id": "BASE-02",
+      "status": "PASS"
+    },
+    {
+      "dependencies": [
+        "BASE-01",
+        "BASE-02"
+      ],
+      "evidenceSha256": "5e3c33e31b83514b1ec2156dc027816196299b8a95379ca1a879c7792255e64e",
+      "id": "BASE-03",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "ENV-02",
+        "ENV-03",
+        "ENV-04",
+        "SRC-03"
+      ],
+      "evidenceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "id": "NAT-01",
+      "status": "NOT STARTED"
+    },
+    {
+      "dependencies": [
+        "NAT-01",
+        "AUTH-01"
+      ],
+      "evidenceSha256": "267f84b9953ce596b9e5ec8bc9c85620af02d9d26e5ec927126ed72378908357",
+      "id": "NAT-02",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "NAT-02"
+      ],
+      "evidenceSha256": "316ec3d5601a5e38f58dfdcaf1576109a261fa95ab6a364a98465c290b0b8249",
+      "id": "NAT-03",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "NAT-02",
+        "NAT-03"
+      ],
+      "evidenceSha256": "18c018b5ae207cf789a34f782824928b02212af0a03ea791046249cf4f31c294",
+      "id": "NAT-04",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "NAT-04",
+        "ENV-03"
+      ],
+      "evidenceSha256": "de5a50610c1659a3c14deab67128325897ff136edfc1d95e69916033cd9e2f81",
+      "id": "NAT-05",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "NAT-03",
+        "NAT-05"
+      ],
+      "evidenceSha256": "d393f58b7f2daf20995557495c452fa1ae7da6c9f9bbdf0eb9fd8ab57156c5dc",
+      "id": "NAT-06",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "NAT-01",
+        "ENV-03"
+      ],
+      "evidenceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "id": "PROV-01",
+      "status": "NOT STARTED"
+    },
+    {
+      "dependencies": [
+        "NAT-01",
+        "ENV-03"
+      ],
+      "evidenceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "id": "PROV-02",
+      "status": "NOT STARTED"
+    },
+    {
+      "dependencies": [
+        "NAT-01",
+        "ENV-03"
+      ],
+      "evidenceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "id": "PROV-03",
+      "status": "NOT STARTED"
+    },
+    {
+      "dependencies": [
+        "NAT-01",
+        "ENV-03",
+        "PROV-01"
+      ],
+      "evidenceSha256": "ed3f030cf0156f6e64b1e0aa70e83f177a4906e2a9cff90f59b8afac1528eb19",
+      "id": "PROV-04",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "NAT-03",
+        "ENV-03",
+        "PROV-01",
+        "PROV-02",
+        "PROV-03",
+        "PROV-04"
+      ],
+      "evidenceSha256": "7fd001790af4f0e64a4db1e5ced66a17b288b88b28d7ed00adb0f7b8a2220923",
+      "id": "PROV-05",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "NAT-01"
+      ],
+      "evidenceSha256": "bba13eec437905d0cbca46427fc5092bec884e72667b3e7c77b3da283df17f89",
+      "id": "PROV-06",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "PROV-01",
+        "PROV-02",
+        "PROV-03",
+        "PROV-04",
+        "PROV-05",
+        "NAT-01"
+      ],
+      "evidenceSha256": "1bdb66c1f4523b1ceae0ba4d768e80567f51732a1002cd1525802b741cfd41c3",
+      "id": "RUN-01",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "RUN-01"
+      ],
+      "evidenceSha256": "6e59d8f31355768a0064c16710966475075b59c27aa77db3c2c729a05e86c9c9",
+      "id": "RUN-02",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "RUN-02"
+      ],
+      "evidenceSha256": "c73d711b4f7bc2dbe9b9079e2a86295ae98458499f7813bb78a7c034f3b60195",
+      "id": "RUN-03",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "RUN-02"
+      ],
+      "evidenceSha256": "e9ae60792d2bbd93e6554b309a47b48a630fd59d2ffbbe153b06a0212189f81a",
+      "id": "RUN-04",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "RUN-01"
+      ],
+      "evidenceSha256": "4a803cffdcd19a97ea3af816743034a011986320429329ae8e4b78ea29b7cc8f",
+      "id": "RUN-05",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "RUN-01"
+      ],
+      "evidenceSha256": "9b51e914b5a4e922069ab378ec43869fc39f908e74a6730d30feba2ecbb22b5c",
+      "id": "RUN-06",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "PROV-01",
+        "PROV-02",
+        "PROV-03",
+        "RUN-01"
+      ],
+      "evidenceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "id": "PKG-01",
+      "status": "NOT STARTED"
+    },
+    {
+      "dependencies": [
+        "PKG-01",
+        "VER-01"
+      ],
+      "evidenceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "id": "PKG-02",
+      "status": "NOT STARTED"
+    },
+    {
+      "dependencies": [
+        "PKG-02",
+        "ENV-03"
+      ],
+      "evidenceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "id": "PKG-03",
+      "status": "NOT STARTED"
+    },
+    {
+      "dependencies": [
+        "BASE-01"
+      ],
+      "evidenceSha256": "7367111625929af54ad7bf857dad81b3e456458fadad736d28e7a8ec5b938d7e",
+      "id": "PWA-01",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "PWA-01"
+      ],
+      "evidenceSha256": "37de28cfb33717b96d781a86c7a5b4ab1d042130ce9feebd53f7b073e69e236b",
+      "id": "PWA-02",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "PWA-01",
+        "AUTOSAVE-01"
+      ],
+      "evidenceSha256": "dc1990be258123842ba5bcad75390a747971cc6293a270b8e8570f81081abfd2",
+      "id": "PWA-03",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "BASE-01",
+        "PKG-02"
+      ],
+      "evidenceSha256": "fef260e77ea0c8ac9da6bc4829b20755f8dbe1dca07cbbaba3d6a213d96b13dd",
+      "id": "PWA-04",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "SRC-03"
+      ],
+      "evidenceSha256": "4f6538ceda11d116577ab7cc53ccafbaac810d0e094179317796243f91bbdca8",
+      "id": "AUTH-01",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "AUTH-01",
+        "NAT-03",
+        "PWA-02"
+      ],
+      "evidenceSha256": "580e19370b46cb185c17e7b5ec5dfb9e09ef6a2ff39034b4c1f0a3c9039f59f1",
+      "id": "SYNC-01",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "AUTH-01",
+        "SYNC-01"
+      ],
+      "evidenceSha256": "0286844aaa396554c704024a143c2c659704ca65562bc4f3b2f66cd9b33ded3d",
+      "id": "KEY-01",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "SRC-03"
+      ],
+      "evidenceSha256": "85eb2715f4f6f6533326b162dfe317d322c9a29e2738f40a9d30ed77b36fee59",
+      "id": "AUTOSAVE-01",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "SRC-02",
+        "AUTH-01"
+      ],
+      "evidenceSha256": "d9f09498dd20a635028bffebb85165e25de0198478796612f1de446fde820d84",
+      "id": "PWA-CONN-01",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "SRC-02",
+        "PWA-CONN-01"
+      ],
+      "evidenceSha256": "7a998400204b1efff7c6eb61fcf70174ea7143788b6d0a4401e17162526dc34b",
+      "id": "PWA-CONN-02",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "RUN-05",
+        "ENV-03"
+      ],
+      "evidenceSha256": "9a8e2564552f61c4d8bf9504d0eec9fc508b6a88dfa7b758e9a679ee9f7c5228",
+      "id": "BG-01",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "RUN-02",
+        "BASE-03"
+      ],
+      "evidenceSha256": "12a1cf10e9aecec03bc293ca9f13c59a73cd81c4dd1918dde166978ed5bd33fc",
+      "id": "VERIFY-01",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "SRC-02",
+        "NAT-04"
+      ],
+      "evidenceSha256": "3eb0da4ca1d99fec8b435636f3281bdbf8d46fb0c116b824366fe67bc7d601f7",
+      "id": "GH-01",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "GH-01",
+        "PWA-CONN-01"
+      ],
+      "evidenceSha256": "0e7508829434970be97d3b2d24b26159939626f1fc11a9355667f92ae6df2d4a",
+      "id": "GH-02",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "NAT-03",
+        "ENV-03"
+      ],
+      "evidenceSha256": "802cf31bd7e14a3f95230b4e1a0509f7f23b097a049a8208b6cf93c15f690295",
+      "id": "ICLOUD-01",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "GH-02",
+        "SYNC-01"
+      ],
+      "evidenceSha256": "6e7c36d25757e5c95b7f9dfd3f732eebe8317fb65ec0ffc290e0eb91cefab554",
+      "id": "PRIV-01",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "GOV-01",
+        "SRC-01",
+        "SRC-02",
+        "SRC-03",
+        "VER-01",
+        "ENV-00",
+        "ENV-01",
+        "ENV-02",
+        "ENV-03",
+        "ENV-04",
+        "BASE-01",
+        "BASE-02",
+        "BASE-03",
+        "NAT-01",
+        "NAT-02",
+        "NAT-03",
+        "NAT-04",
+        "NAT-05",
+        "NAT-06",
+        "PROV-01",
+        "PROV-02",
+        "PROV-03",
+        "PROV-04",
+        "PROV-05",
+        "PROV-06",
+        "RUN-01",
+        "RUN-02",
+        "RUN-03",
+        "RUN-04",
+        "RUN-05",
+        "RUN-06",
+        "PKG-01",
+        "PKG-02",
+        "PKG-03",
+        "PWA-01",
+        "PWA-02",
+        "PWA-03",
+        "PWA-04",
+        "AUTH-01",
+        "SYNC-01",
+        "KEY-01",
+        "AUTOSAVE-01",
+        "PWA-CONN-01",
+        "PWA-CONN-02",
+        "BG-01",
+        "VERIFY-01",
+        "GH-01",
+        "GH-02",
+        "ICLOUD-01",
+        "PRIV-01"
+      ],
+      "evidenceSha256": "dff43645eba4809abad07e5635330a801f519bdc810d07a89cde2c4b04b27da8",
+      "id": "REL-01",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "ENV-04",
+        "VER-01",
+        "REL-01"
+      ],
+      "evidenceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "id": "REL-02",
+      "status": "NOT STARTED"
+    },
+    {
+      "dependencies": [
+        "REL-01",
+        "REL-02",
+        "REL-05"
+      ],
+      "evidenceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "id": "REL-03",
+      "status": "NOT STARTED"
+    },
+    {
+      "dependencies": [
+        "REL-03",
+        "ENV-03",
+        "PROV-01",
+        "PROV-02",
+        "PROV-03",
+        "PROV-04",
+        "PROV-05",
+        "RUN-01"
+      ],
+      "evidenceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "id": "REL-04",
+      "status": "NOT STARTED"
+    },
+    {
+      "dependencies": [
+        "SRC-02",
+        "REL-01",
+        "REL-02"
+      ],
+      "evidenceSha256": "2229e135215c2e2a0d1dcacb511b5cecb6f89f3972d4292a882667fda17fb839",
+      "id": "REL-05",
+      "status": "IN PROGRESS"
+    },
+    {
+      "dependencies": [
+        "REL-01",
+        "PKG-02"
+      ],
+      "evidenceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "id": "REL-06",
+      "status": "NOT STARTED"
+    },
+    {
+      "dependencies": [
+        "REL-04",
+        "REL-02"
+      ],
+      "evidenceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "id": "REL-07",
+      "status": "NOT STARTED"
+    }
+  ],
+  "recordType": "local-sandbox-qualification-snapshot",
+  "requirements": {
+    "rows": 57,
+    "sha256": "33345ff9f33c13ef2f85904fa2f1505b9cc812449f3d33928372c081f831b789"
+  },
+  "schemaVersion": 1,
+  "version": "0.3.0",
+  "workbook": {
+    "path": "qualification/Local-Sandbox-0.3-Progress.xlsx",
+    "sha256": "0238e81588eeae78c005c2d37a257459df8784ee63b3436b079fd3be8ce29c7f"
+  }
+}
