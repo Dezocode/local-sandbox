@@ -1,7 +1,7 @@
 {
   "evidence": {
     "rows": 48,
-    "sha256": "4e5172f9ad2277097fee3edc38d0deadaa498f6271cb0a0cf1597105673830d2"
+    "sha256": "e98ac1ec9fa35facb4e7cc3e13fb11e397a40d58e714472d49f4d6da1f78d945"
   },
   "gates": [
     {
@@ -86,9 +86,9 @@
       "dependencies": [
         "SRC-03"
       ],
-      "evidenceSha256": "b66be81ebbd554540f3c5eb6b647924e5442af1db17ac5b18ddbe997b86e3623",
+      "evidenceSha256": "79cf72d3bd13d978d785889683f6c664850d0385b6e83fa6143b01f7fc31ec3c",
       "id": "BASE-01",
-      "status": "IN PROGRESS"
+      "status": "PASS"
     },
     {
       "dependencies": [
@@ -103,9 +103,9 @@
         "BASE-01",
         "BASE-02"
       ],
-      "evidenceSha256": "5e3c33e31b83514b1ec2156dc027816196299b8a95379ca1a879c7792255e64e",
+      "evidenceSha256": "a6419ac262adf606dba87ef6746b2e09359a499ab5246e6ece4122fe6379a169",
       "id": "BASE-03",
-      "status": "IN PROGRESS"
+      "status": "PASS"
     },
     {
       "dependencies": [
@@ -332,7 +332,7 @@
         "BASE-01",
         "PKG-02"
       ],
-      "evidenceSha256": "fef260e77ea0c8ac9da6bc4829b20755f8dbe1dca07cbbaba3d6a213d96b13dd",
+      "evidenceSha256": "91df969556548f54a27ec515ac9e3aa2d095cc61aae066863de50938a3d82bbb",
       "id": "PWA-04",
       "status": "IN PROGRESS"
     },
@@ -496,7 +496,7 @@
         "ICLOUD-01",
         "PRIV-01"
       ],
-      "evidenceSha256": "dff43645eba4809abad07e5635330a801f519bdc810d07a89cde2c4b04b27da8",
+      "evidenceSha256": "faa8d44f32f2319ec596bf86469d40fba613c7ee50638056bc93772add7149c5",
       "id": "REL-01",
       "status": "IN PROGRESS"
     },
@@ -567,12 +567,12 @@
   "recordType": "local-sandbox-qualification-snapshot",
   "requirements": {
     "rows": 57,
-    "sha256": "33345ff9f33c13ef2f85904fa2f1505b9cc812449f3d33928372c081f831b789"
+    "sha256": "b4625752030dcf0348b20985d254fb7bf67fb575203d1bd16bbb9bc3516aa41a"
   },
   "schemaVersion": 1,
   "version": "0.3.0",
   "workbook": {
     "path": "qualification/Local-Sandbox-0.3-Progress.xlsx",
-    "sha256": "0238e81588eeae78c005c2d37a257459df8784ee63b3436b079fd3be8ce29c7f"
+    "sha256": "baab1ae6b2a19a35778dc2203ba62472fbfbfcc5712e938eccd2fc6ecc710ca1"
   }
 }
