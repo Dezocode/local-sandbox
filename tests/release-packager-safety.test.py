@@ -985,6 +985,20 @@ class ReleasePackagerSafetyTests(unittest.TestCase):
             self.assertEqual(archive_source, b"authorized source\n")
             self.assertIsNotNone(snapshot_root)
             self.assertFalse(snapshot_root.exists())
+            metadata_checks = [
+                (command, cwd)
+                for command, cwd, _environment in child_calls
+                if len(command) > 1
+                and command[0] == sys.executable
+                and command[1].endswith(str(APPLE.APP_INTENTS_METADATA_CHECKER))
+            ]
+            self.assertEqual(len(metadata_checks), 1)
+            metadata_command, metadata_cwd = metadata_checks[0]
+            self.assertEqual(metadata_cwd, snapshot_root)
+            self.assertEqual(
+                Path(metadata_command[1]),
+                snapshot_root / APPLE.APP_INTENTS_METADATA_CHECKER,
+            )
             self.assertEqual(
                 sum(
                     APPLE.ACTION_READINESS_ENVIRONMENT in environment

@@ -43,7 +43,9 @@ jobs:
       - name: Show installed Apple toolchain
         run: xcodebuild -version && xcodebuild -showsdks
       - name: Compile native app
-        run: xcodebuild -project ios/LocalSandbox.xcodeproj -scheme LocalSandbox -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+        run: xcodebuild -project ios/LocalSandbox.xcodeproj -scheme LocalSandbox -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/local-sandbox-native-derived" CODE_SIGNING_ALLOWED=NO build
+      - name: Verify compiled App Shortcuts metadata
+        run: python3 scripts/release/app_intents_metadata.py "$RUNNER_TEMP/local-sandbox-native-derived/Build/Products/Debug-iphonesimulator/LocalSandbox.app/Metadata.appintents/extract.actionsdata"
       - name: Run contract tests on an available iPhone simulator
         shell: bash
         run: |

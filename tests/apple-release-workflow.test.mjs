@@ -37,6 +37,9 @@ const appleCiPath = new URL('../scripts/release/apple_ci.mjs', import.meta.url);
 const candidateDigestPath = fileURLToPath(
   new URL('../scripts/release/candidate_digest.py', import.meta.url),
 );
+const appIntentsMetadataPath = fileURLToPath(
+  new URL('../scripts/release/app_intents_metadata.py', import.meta.url),
+);
 const commit = 'a'.repeat(40);
 const fixtureCandidateDigest = '5'.repeat(64);
 const releaseXcode = Object.freeze({ build: '27A266a', version: '27.0' });
@@ -124,6 +127,67 @@ test('Apple CI removes protected readiness before helper processes can inherit i
     if (Object.hasOwn(process.env, 'LS_APPLE_ACTION_READINESS_JSON')) process.exit(91);
   `;
   execFileSync(process.execPath, ['--input-type=module', '--eval', program]);
+});
+
+test('compiled App Shortcuts metadata keeps nine actions on iOS 26 and only the long action on iOS 27', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'local-sandbox-app-intents-'));
+  try {
+    const metadataPath = path.join(root, 'extract.actionsdata');
+    const ios26 = [
+      'ApplyValidatedActionIntent',
+      'BeginOracleTaskIntent',
+      'BeginProviderQualificationIntent',
+      'ConfigureOracleRoutingIntent',
+      'OpenSandboxIntent',
+      'PrepareWorkspaceIntent',
+      'QualifyAppleProviderIntent',
+      'RecordProviderQualificationIntent',
+      'RunSandboxIntent',
+    ];
+    const wildcard = {LNPlatformNameWildcard: {introducedVersion: '*'}};
+    const fixture = {
+      autoShortcuts: [
+        ...ios26.map((actionIdentifier) => ({
+          actionIdentifier,
+          availabilityAnnotations: structuredClone(wildcard),
+        })),
+        {
+          actionIdentifier: 'RunLongAppleTaskIntent',
+          availabilityAnnotations: {
+            ...wildcard,
+            LNPlatformNameIOS: {introducedVersion: '27.0'},
+          },
+        },
+      ],
+    };
+
+    await writeFile(metadataPath, JSON.stringify(fixture));
+    const output = JSON.parse(execFileSync(
+      process.env.LOCAL_SANDBOX_RELEASE_PYTHON || 'python3',
+      [appIntentsMetadataPath, metadataPath],
+      {encoding: 'utf8'},
+    ));
+    assert.equal(output.status, 'passed');
+    assert.equal(output.autoShortcuts, 10);
+    assert.equal(output.ios26Compatible.length, 9);
+    assert.deepEqual(output.ios27Only, ['RunLongAppleTaskIntent']);
+    assert.equal(output.openSandboxAvailability, 'wildcard-only');
+
+    const broken = structuredClone(fixture);
+    broken.autoShortcuts.find(({actionIdentifier}) => actionIdentifier === 'OpenSandboxIntent')
+      .availabilityAnnotations.LNPlatformNameIOS = {introducedVersion: '27.0'};
+    await writeFile(metadataPath, JSON.stringify(broken));
+    assert.throws(
+      () => execFileSync(
+        process.env.LOCAL_SANDBOX_RELEASE_PYTHON || 'python3',
+        [appIntentsMetadataPath, metadataPath],
+        {stdio: 'pipe'},
+      ),
+      /OpenSandboxIntent must be wildcard-only/,
+    );
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
 });
 
 function appleReadiness({
@@ -1054,6 +1118,35 @@ test('Apple release workflow verifies everything before exposing the private key
     /"CODE_SIGNING_ALLOWED=NO"/,
     'simulator tests must retain Xcode simulated entitlements for Keychain coverage',
   );
+  const simulatorBuild = appleLocalSource.slice(
+    appleLocalSource.indexOf('if options.stage == "test":'),
+    appleLocalSource.indexOf('authentication = []'),
+  );
+  assert.ok(
+    simulatorBuild.indexOf('"test",') < simulatorBuild.indexOf('verify_app_intents_metadata('),
+    'simulator tests must verify their compiled App Intents metadata',
+  );
+  const deviceBuild = appleLocalSource.slice(
+    appleLocalSource.indexOf('if options.stage == "install":'),
+    appleLocalSource.indexOf('archive = output_root'),
+  );
+  assert.ok(
+    deviceBuild.indexOf('"build",') < deviceBuild.indexOf('verify_app_intents_metadata('),
+    'device builds must verify their compiled App Intents metadata before installation',
+  );
+  const archiveBuild = appleLocalSource.slice(
+    appleLocalSource.indexOf('with immutable_source_snapshot('),
+    appleLocalSource.indexOf('export_options = {'),
+  );
+  assert.ok(
+    archiveBuild.indexOf('"archive",') < archiveBuild.indexOf('verify_app_intents_metadata('),
+    'archives must verify their compiled App Intents metadata before export',
+  );
+  assert.match(
+    archiveBuild,
+    /verify_app_intents_metadata\([\s\S]*checker_root=source_root/,
+    'archive metadata verification must use the checker from the immutable source snapshot',
+  );
   assert.match(appleLocalSource, /readiness_json = os\.environ\.pop\(ACTION_READINESS_ENVIRONMENT, None\)/);
   assert.match(appleLocalSource, /with immutable_source_snapshot\(options\.release_commit/);
   assert.match(appleLocalSource, /recheck_release_xcode\(release_toolchain, child_environment\)/);
@@ -1077,6 +1170,21 @@ test('Continuous verification separates portable Ubuntu evidence from canonical 
       `${action} must be pinned once in each verification job`,
     );
   }
+  const nativeCompile = verificationWorkflow.slice(
+    verificationWorkflow.indexOf('- name: Compile native app'),
+    verificationWorkflow.indexOf('- name: Run contract tests on an available iPhone simulator'),
+  );
+  const nativeBuild = nativeCompile.indexOf('xcodebuild -project ios/LocalSandbox.xcodeproj');
+  const metadataCheck = nativeCompile.indexOf('python3 scripts/release/app_intents_metadata.py');
+  assert.ok(nativeBuild >= 0 && metadataCheck > nativeBuild);
+  assert.match(
+    nativeCompile,
+    /-derivedDataPath "\$RUNNER_TEMP\/local-sandbox-native-derived"/,
+  );
+  assert.match(
+    nativeCompile,
+    /local-sandbox-native-derived\/Build\/Products\/Debug-iphonesimulator\/LocalSandbox\.app\/Metadata\.appintents\/extract\.actionsdata/,
+  );
   assert.doesNotMatch(
     verificationWorkflow,
     /uses:\s+actions\/(?:checkout|setup-node|setup-python)@v\d+/,

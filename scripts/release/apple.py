@@ -15,6 +15,7 @@ import re
 import shutil
 import stat
 import subprocess
+import sys
 import tarfile
 import tempfile
 from typing import Iterator, NamedTuple
@@ -33,6 +34,7 @@ ACTION_READINESS_ENVIRONMENT = "LS_APPLE_ACTION_READINESS_JSON"
 GIT_EXECUTABLE = Path("/usr/bin/git")
 XCODE_SELECT_EXECUTABLE = Path("/usr/bin/xcode-select")
 XCRUN_EXECUTABLE = Path("/usr/bin/xcrun")
+APP_INTENTS_METADATA_CHECKER = Path("scripts/release/app_intents_metadata.py")
 
 
 class PinnedXcode(NamedTuple):
@@ -45,6 +47,23 @@ class PinnedXcode(NamedTuple):
 
 def run(arguments: list[str], *, cwd: Path, env: dict[str, str]) -> None:
     subprocess.run(arguments, cwd=cwd, env=env, check=True)
+
+
+def verify_app_intents_metadata(
+    app_bundle: Path,
+    *,
+    checker_root: Path = ROOT,
+    env: dict[str, str],
+) -> None:
+    run(
+        [
+            sys.executable,
+            str(checker_root / APP_INTENTS_METADATA_CHECKER),
+            str(app_bundle / "Metadata.appintents/extract.actionsdata"),
+        ],
+        cwd=checker_root,
+        env=env,
+    )
 
 
 def xcode_environment(base_environment: dict[str, str], toolchain: PinnedXcode) -> dict[str, str]:
@@ -294,14 +313,21 @@ def main(arguments: list[str] | None = None) -> None:
             raise ValueError(
                 "Supply --simulator with an available iPhone simulator UDID from xcrun simctl list devices available."
             )
+        derived = output_root / "simulator-test-derived"
         run(
             base
             + [
                 "-destination",
                 "platform=iOS Simulator,id=" + options.simulator,
+                "-derivedDataPath",
+                str(derived),
                 "test",
             ],
             cwd=ROOT,
+            env=child_environment,
+        )
+        verify_app_intents_metadata(
+            derived / "Build/Products/Debug-iphonesimulator/LocalSandbox.app",
             env=child_environment,
         )
         return
@@ -345,6 +371,10 @@ def main(arguments: list[str] | None = None) -> None:
                 "build",
             ],
             cwd=ROOT,
+            env=child_environment,
+        )
+        verify_app_intents_metadata(
+            derived / "Build/Products/Debug-iphoneos/LocalSandbox.app",
             env=child_environment,
         )
         run(
@@ -393,6 +423,11 @@ def main(arguments: list[str] | None = None) -> None:
                 "archive",
             ],
             cwd=source_root,
+            env=release_environment,
+        )
+        verify_app_intents_metadata(
+            archive / "Products/Applications/LocalSandbox.app",
+            checker_root=source_root,
             env=release_environment,
         )
         export_options = {

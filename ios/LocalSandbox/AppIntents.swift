@@ -364,10 +364,10 @@ struct LocalSandboxShortcuts: AppShortcutsProvider {
         AppShortcut(intent:RecordProviderQualificationIntent(),phrases:["Record a provider check in \(.applicationName)"],shortTitle:"Record provider check",systemImageName:"checkmark.seal")
         AppShortcut(intent:QualifyAppleProviderIntent(),phrases:["Qualify Apple Intelligence in \(.applicationName)"],shortTitle:"Qualify Apple Intelligence",systemImageName:"apple.intelligence")
         AppShortcut(intent:ConfigureOracleRoutingIntent(),phrases:["Apply the Oracle recommendation in \(.applicationName)"],shortTitle:"Apply Oracle route",systemImageName:"point.3.connected.trianglepath.dotted")
+        AppShortcut(intent:OpenSandboxIntent(),phrases:["Open \(.applicationName)"],shortTitle:"Open sandbox",systemImageName:"folder")
         if #available(iOS 27.0, *) {
             AppShortcut(intent:RunLongAppleTaskIntent(),phrases:["Run a long Apple task in \(.applicationName)"],shortTitle:"Run long Apple task",systemImageName:"sparkles")
         }
-        AppShortcut(intent:OpenSandboxIntent(),phrases:["Open \(.applicationName)"],shortTitle:"Open sandbox",systemImageName:"folder")
     }
 }
 
