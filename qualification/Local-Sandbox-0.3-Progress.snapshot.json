@@ -1,7 +1,7 @@
 {
   "evidence": {
     "rows": 152,
-    "sha256": "3c9132b875668e034678104f023aab9d5f858f366dde2fd956d72963a24a300c"
+    "sha256": "ceedcbfec163027892db4861da6b61be45d2ee3ca0a8b4ad5661ba0f1a0cb014"
   },
   "gates": [
     {
@@ -86,9 +86,9 @@
       "dependencies": [
         "SRC-03"
       ],
-      "evidenceSha256": "47900556cd604a77b7cefe844a7dcf4ce40b45aff08be1d5952ce40839fa0ee8",
+      "evidenceSha256": "b70333609a9a70c650a1e23ef81ace719a390122e97a487982327bfffd573d31",
       "id": "BASE-01",
-      "status": "IN PROGRESS"
+      "status": "PASS"
     },
     {
       "dependencies": [
@@ -103,9 +103,9 @@
         "BASE-01",
         "BASE-02"
       ],
-      "evidenceSha256": "5646a19e3e2e39879e4ef113a4b777df99a0ed07bec19edf6b47131e8b6080d3",
+      "evidenceSha256": "5c10108b7c7031457e068aebb878c1790a0aa5baed66c5439d51ebe313fe8a62",
       "id": "BASE-03",
-      "status": "IN PROGRESS"
+      "status": "PASS"
     },
     {
       "dependencies": [
@@ -332,7 +332,7 @@
         "BASE-01",
         "PKG-02"
       ],
-      "evidenceSha256": "57f54ed5a1dc91b6a0e71894dff7b70e37014a33255fabe3d74c538bb5ad824d",
+      "evidenceSha256": "38d405591738f549621436d3af12979adfd38a0f2d6962876405fbf20a66e8a3",
       "id": "PWA-04",
       "status": "IN PROGRESS"
     },
@@ -496,7 +496,7 @@
         "ICLOUD-01",
         "PRIV-01"
       ],
-      "evidenceSha256": "59444196d8226a916a7567c0184ea20adf6da5372ecdeb40ca41c3d2a4f62cb7",
+      "evidenceSha256": "7402934b5ed1fb3a2aab6e87535d183f7e80708d1cf00b37f57c9bf40ccf13ae",
       "id": "REL-01",
       "status": "IN PROGRESS"
     },
@@ -567,12 +567,12 @@
   "recordType": "local-sandbox-qualification-snapshot",
   "requirements": {
     "rows": 57,
-    "sha256": "22ca3598ac84e15f028e9de19897aaab97d2a3ffb1a0fc08d378fc086172f47f"
+    "sha256": "8ba64587a54835eff23159200b2ee79aaf9a1793776d0ea8fa946441c85e4dca"
   },
   "schemaVersion": 1,
   "version": "0.3.0",
   "workbook": {
     "path": "qualification/Local-Sandbox-0.3-Progress.xlsx",
-    "sha256": "13bbfe1d3321c024f5427fa087f221aad4fc57456ad5bd6bac2192ebab500438"
+    "sha256": "1a1b4b508ee921a3bbfc3e5a46553582645d9df0d6664ca513338d233f6720ef"
   }
 }
