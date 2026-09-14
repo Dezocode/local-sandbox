@@ -135,5 +135,6 @@ test('the offline shell caches every autosave module and app DOM references exis
   const [app,html,worker]=await Promise.all([readFile(new URL('app.js',root),'utf8'),readFile(new URL('index.html',root),'utf8'),readFile(new URL('sw.js',root),'utf8')]);
   const referenced=[...app.matchAll(/el\('([^']+)'\)/g)].map(match=>match[1]);
   assert.deepEqual([...new Set(referenced)].filter(id=>!html.includes(`id="${id}"`)),[]);
+  for(const id of ['editor','prompt'])assert.match(html,new RegExp(`<textarea(?=[^>]*\\bid="${id}")(?=[^>]*\\bautocomplete="off")[^>]*>`));
   for(const file of ['index.html','style.css','app.js','local-autosave.js','draft-journal.js','storage.js','vault.js','github.js'])assert.match(worker,new RegExp(`['"]\\./${file.replace('.','\\.')}['"]`));
 });

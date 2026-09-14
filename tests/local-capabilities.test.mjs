@@ -59,6 +59,7 @@ test('the app guards callbacks, handlers, tab entry, and automatic refresh befor
   assert.match(html,/id="deployment-capability-notice"/);
   assert.match(app,/static package has no hosted identity or API service/i);
   assert.match(html,/Capability metadata/);
-  assert.match(worker,/local-sandbox-shell-0\.3\.0-build10/);
+  assert.match(worker,/local-sandbox-shell-0\.3\.0-build11/);
+  assert.doesNotMatch(worker,/local-sandbox-shell-0\.3\.0-build10/);
   for(const file of ['capabilities.js','capabilities.json'])assert.match(worker,new RegExp(`['"]\\./${file.replace('.','\\.')}['"]`));
 });
