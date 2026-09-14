@@ -1,7 +1,7 @@
 {
   "evidence": {
-    "rows": 114,
-    "sha256": "16453339c12b4ffcaf7657862406e5705fb86edc29df5d8fa1ef0fe4ff036d66"
+    "rows": 133,
+    "sha256": "fb215df4253f1853cee883481c9bf2504b84fbe26816736f2fc7aabdfd67fbeb"
   },
   "gates": [
     {
@@ -86,7 +86,7 @@
       "dependencies": [
         "SRC-03"
       ],
-      "evidenceSha256": "6fc7b08fc487fa66cafcf9c1ba15ac29b00bbbe2e44a73ee90c911b39e8dc966",
+      "evidenceSha256": "4ea44ff0c3c179fd3c871cea2992a9a419d0fd2b0ea162f82cbc9ae946a44c83",
       "id": "BASE-01",
       "status": "PASS"
     },
@@ -103,7 +103,7 @@
         "BASE-01",
         "BASE-02"
       ],
-      "evidenceSha256": "1dce7036c41fc767204411c7dac676a6b3feeee86154528a96ff581808213838",
+      "evidenceSha256": "c61735ea99f227f3981dd34b994e0263b143a42d6cd148e25493d82c1e2afad2",
       "id": "BASE-03",
       "status": "PASS"
     },
@@ -123,7 +123,7 @@
         "NAT-01",
         "AUTH-01"
       ],
-      "evidenceSha256": "267f84b9953ce596b9e5ec8bc9c85620af02d9d26e5ec927126ed72378908357",
+      "evidenceSha256": "f3b73691ef63f7b5cc998ad4c8ddd6fff5df34f0d273023c6cf4ee32b397279e",
       "id": "NAT-02",
       "status": "IN PROGRESS"
     },
@@ -140,7 +140,7 @@
         "NAT-02",
         "NAT-03"
       ],
-      "evidenceSha256": "18c018b5ae207cf789a34f782824928b02212af0a03ea791046249cf4f31c294",
+      "evidenceSha256": "5195a88a92b40fb913ebe0dbfee31aafa8f673c57edab728da3d606822d46056",
       "id": "NAT-04",
       "status": "IN PROGRESS"
     },
@@ -149,7 +149,7 @@
         "NAT-04",
         "ENV-03"
       ],
-      "evidenceSha256": "de5a50610c1659a3c14deab67128325897ff136edfc1d95e69916033cd9e2f81",
+      "evidenceSha256": "a266037579ace753446aa5da322bdb1205e2afb78af2b805053456da83e2c536",
       "id": "NAT-05",
       "status": "IN PROGRESS"
     },
@@ -195,7 +195,7 @@
         "ENV-03",
         "PROV-01"
       ],
-      "evidenceSha256": "ed3f030cf0156f6e64b1e0aa70e83f177a4906e2a9cff90f59b8afac1528eb19",
+      "evidenceSha256": "8c76f9145e8664a1772ec4e5576d9b39ef128e0b8c5d8a4c81d08f501cbfbe17",
       "id": "PROV-04",
       "status": "IN PROGRESS"
     },
@@ -216,7 +216,7 @@
       "dependencies": [
         "NAT-01"
       ],
-      "evidenceSha256": "bba13eec437905d0cbca46427fc5092bec884e72667b3e7c77b3da283df17f89",
+      "evidenceSha256": "653259b19c6068ede3cc6cdee10ff35d2fc81145abb5224dca30f83386a8c2f2",
       "id": "PROV-06",
       "status": "IN PROGRESS"
     },
@@ -229,7 +229,7 @@
         "PROV-05",
         "NAT-01"
       ],
-      "evidenceSha256": "1bdb66c1f4523b1ceae0ba4d768e80567f51732a1002cd1525802b741cfd41c3",
+      "evidenceSha256": "ae0d9ac1f65bdd2679cab83f57656cd705cf256c14c1a8b42ffc5a3beab8aeaa",
       "id": "RUN-01",
       "status": "IN PROGRESS"
     },
@@ -237,7 +237,7 @@
       "dependencies": [
         "RUN-01"
       ],
-      "evidenceSha256": "6e59d8f31355768a0064c16710966475075b59c27aa77db3c2c729a05e86c9c9",
+      "evidenceSha256": "0e4e07d31c0ed9ce9a3146821a45e676738aace61588363c2d93faf6d1d8bf2a",
       "id": "RUN-02",
       "status": "IN PROGRESS"
     },
@@ -261,7 +261,7 @@
       "dependencies": [
         "RUN-01"
       ],
-      "evidenceSha256": "4a803cffdcd19a97ea3af816743034a011986320429329ae8e4b78ea29b7cc8f",
+      "evidenceSha256": "9c3ce6ead589e55cf31932b620bab50c1a72b749fc51019c1869c07a422fdcf9",
       "id": "RUN-05",
       "status": "IN PROGRESS"
     },
@@ -323,7 +323,7 @@
         "PWA-01",
         "AUTOSAVE-01"
       ],
-      "evidenceSha256": "dc1990be258123842ba5bcad75390a747971cc6293a270b8e8570f81081abfd2",
+      "evidenceSha256": "63c4910dfe8e7306448f0c79ad792e9ff6d9ee53fd857c67abb8b9a151091958",
       "id": "PWA-03",
       "status": "IN PROGRESS"
     },
@@ -332,7 +332,7 @@
         "BASE-01",
         "PKG-02"
       ],
-      "evidenceSha256": "d433cc7fca3a14b68650946734abff3f96191e03081ba80b7170cec197e65102",
+      "evidenceSha256": "470c5dc136fd6ecbe6287f35720c9ed555fac1fbd39700bb5e801715136b76e5",
       "id": "PWA-04",
       "status": "IN PROGRESS"
     },
@@ -340,7 +340,7 @@
       "dependencies": [
         "SRC-03"
       ],
-      "evidenceSha256": "24f8d5eb248564d5c28fd28c6c95574f176c0e30beaeae8a8592f123b8a9df54",
+      "evidenceSha256": "2305d481e41f4a538fd9877744a5c8fdde38aa82b83076f4c075936b75f297ef",
       "id": "AUTH-01",
       "status": "IN PROGRESS"
     },
@@ -359,7 +359,7 @@
         "AUTH-01",
         "SYNC-01"
       ],
-      "evidenceSha256": "0286844aaa396554c704024a143c2c659704ca65562bc4f3b2f66cd9b33ded3d",
+      "evidenceSha256": "7119b93b65115009c0ba6dfed1b99cb40102b30adb57bb265d4efc2b1de0e382",
       "id": "KEY-01",
       "status": "IN PROGRESS"
     },
@@ -367,7 +367,7 @@
       "dependencies": [
         "SRC-03"
       ],
-      "evidenceSha256": "52099e12e4546cc2b2cf3a7563e12a79b2d0032fa8fdd368d66dc81a9a2b6dd0",
+      "evidenceSha256": "d73420df45c84dd7aa0ba3dd669d63a3ea243c25afba6c84d52a259d7d9d4700",
       "id": "AUTOSAVE-01",
       "status": "IN PROGRESS"
     },
@@ -394,7 +394,7 @@
         "RUN-05",
         "ENV-03"
       ],
-      "evidenceSha256": "24de1f0551e206749e7abf5a0a103aa0aae9d9bac18bb928fbd4f139090f506c",
+      "evidenceSha256": "667094148fb60b787fb92ae27d5aea8ae3c93e328ba0a4ec54a010f2f693841a",
       "id": "BG-01",
       "status": "IN PROGRESS"
     },
@@ -403,7 +403,7 @@
         "RUN-02",
         "BASE-03"
       ],
-      "evidenceSha256": "12a1cf10e9aecec03bc293ca9f13c59a73cd81c4dd1918dde166978ed5bd33fc",
+      "evidenceSha256": "e62cde7f18230e6e9973397a63b5afd110d0590704ad07aaa2bccede87fbc7c9",
       "id": "VERIFY-01",
       "status": "IN PROGRESS"
     },
@@ -439,7 +439,7 @@
         "GH-02",
         "SYNC-01"
       ],
-      "evidenceSha256": "6e7c36d25757e5c95b7f9dfd3f732eebe8317fb65ec0ffc290e0eb91cefab554",
+      "evidenceSha256": "80e0dd112ec0eb1536a39f70b4ea769aa805c38c4400ffa55537d73990b91a0e",
       "id": "PRIV-01",
       "status": "IN PROGRESS"
     },
@@ -496,7 +496,7 @@
         "ICLOUD-01",
         "PRIV-01"
       ],
-      "evidenceSha256": "509968465edcf8a853e447d845c326c7a173832d59769ea26843bbfc99eb0ead",
+      "evidenceSha256": "1b0cea21316a3f78bcbabb6d689795ddf01b696180db62fc222a11e02eb297ce",
       "id": "REL-01",
       "status": "IN PROGRESS"
     },
@@ -567,12 +567,12 @@
   "recordType": "local-sandbox-qualification-snapshot",
   "requirements": {
     "rows": 57,
-    "sha256": "3689fdb5513252d13cdba59ab88aea34f5115e008bdea8a9c1ea2324deaa7812"
+    "sha256": "a5d82a3ce36f67952292ea4d9332b461e8ae512d73d7505f3e61b9d0a67babe8"
   },
   "schemaVersion": 1,
   "version": "0.3.0",
   "workbook": {
     "path": "qualification/Local-Sandbox-0.3-Progress.xlsx",
-    "sha256": "ab48fe7d07f9d8c71068ce9eadeb45af82c1559da7a2b6842f9c18ba7b85e089"
+    "sha256": "6ad260dd49a94a3ca04047b1fbb789c8c3e7e573e9e531296bcfa72c763cea39"
   }
 }
