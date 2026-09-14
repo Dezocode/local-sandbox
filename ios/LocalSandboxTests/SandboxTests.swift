@@ -447,7 +447,7 @@ final class SandboxTests:XCTestCase {
         XCTAssertEqual(bearerDeleteCount, 0)
         XCTAssertNotNil(storedBearer)
         XCTAssertEqual(requestCount, 0)
-        XCTAssertTrue(app.error.contains("local profile was kept unchanged"))
+        XCTAssertTrue(app.error.contains("local profile and its Keychain evidence were kept unchanged"))
         XCTAssertTrue(app.error.contains("KEYCHAIN_READ_FAILED"))
     }
 
@@ -524,7 +524,7 @@ final class SandboxTests:XCTestCase {
         XCTAssertNil(storedBearer, "Separate retirement may clear only after the exact token is durably queued")
         XCTAssertEqual(queued.map(\.bearerToken), [session.token])
         XCTAssertEqual(revokeRequests, 1)
-        XCTAssertTrue(model.status.contains("saved for bounded server-revocation retry"))
+        XCTAssertTrue(model.status.contains("saved in device-only Keychain until server revocation is confirmed"))
     }
 
     @MainActor
@@ -610,12 +610,14 @@ final class SandboxTests:XCTestCase {
             admissionBlocked: { NativeHostedAccessAdmission.isBlocked() }
         )
         let transport = HeldNativeRevocationTransport()
+        let pendingRevocationVault = NativePendingRevocationVault.transient()
         let nativeAuth = NativeAppleAuthController(
             api: NativeAppleAuthAPI(
                 endpoints: try NativeServiceEndpoints(origin: URL(string: "https://example.com")!),
                 transport: transport
             ),
-            vault: vault
+            vault: vault,
+            pendingRevocationVault: pendingRevocationVault
         )
         let app = AppModel(nativeAuth: nativeAuth)
         let sync = NativeWorkspaceSyncModel(bearerVault: vault)
@@ -631,11 +633,13 @@ final class SandboxTests:XCTestCase {
         XCTAssertTrue(NativeHostedAccessAdmission.isBlocked())
         XCTAssertNil(vault.load(now: now), "Disconnect must close bearer admission before awaiting revocation")
         XCTAssertTrue(sync.status.contains("Encryption keys were cleared"))
-        XCTAssertNotNil(storedBearer, "The held revoke fixture cleared its bearer before the response")
+        XCTAssertNil(storedBearer, "The active bearer was not cleared after its exact retirement was durably staged")
+        XCTAssertEqual(try pendingRevocationVault.snapshot(now: now).map(\.bearerToken), [session.token])
 
         try await transport.release()
         await disconnect.value
         XCTAssertNil(storedBearer)
+        XCTAssertTrue(try pendingRevocationVault.snapshot(now: now).isEmpty)
     }
 
     @MainActor
@@ -732,7 +736,7 @@ final class SandboxTests:XCTestCase {
             accountMode: .standalone
         )
         let encodedBearer = String(decoding: try JSONEncoder().encode(bearer), as: UTF8.self)
-        let passphrase = String(repeating: "P", count: 43)
+        let passphrase = String(repeating: "A", count: 43)
         let created = try WorkspaceCrypto.create(
             passphrase: passphrase,
             createdAt: "2026-09-12T00:00:00Z"
@@ -931,12 +935,23 @@ final class SandboxTests:XCTestCase {
     }
     func testBackgroundResumeRequiresSafeCheckpointAndMatchingPolicy() throws {
         var policy=ResourcePolicy();policy.provider="apple"
-        let checkpoint=RunCheckpoint(runID:"run",goal:"goal",nextStep:1,capsule:"state",lastResult:"latest",phase:"ready",policy:policy)
+        let routingEvidence=ProviderRoutingEvidence(
+            selection:.apple,
+            provider:.apple,
+            authorizedProvider:.apple,
+            strategy:.explicitPinned,
+            activity:.workspaceIdle,
+            accessEvidence:.onDeviceRuntime,
+            deviceProfileSHA256:String(repeating:"d",count:64),
+            configurationSHA256:String(repeating:"e",count:64),
+            qualification:nil
+        )
+        let checkpoint=RunCheckpoint(runID:"run",goal:"goal",nextStep:1,capsule:"state",lastResult:"latest",phase:"ready",policy:policy,taskOrigin:.app,routingEvidence:routingEvidence)
         let context=BackgroundExecutionContext(protectedDataAvailable:true,workspaceConnected:true,workspaceRequiresNetworkConnectivity:false,backgroundRefreshAvailable:true,nativeProviderAvailable:true,currentPolicy:policy)
         guard case .resume(let plan)=BackgroundExecutionPolicy.evaluate(checkpoint:checkpoint,context:context) else{return XCTFail("Expected a resume plan")}
         XCTAssertEqual(plan.runID,"run");XCTAssertEqual(plan.nextStep,1);XCTAssertFalse(plan.requiresNetworkConnectivity)
 
-        let executing=RunCheckpoint(runID:"run",goal:"goal",nextStep:1,capsule:"state",lastResult:"latest",phase:"executing",policy:policy)
+        let executing=RunCheckpoint(runID:"run",goal:"goal",nextStep:1,capsule:"state",lastResult:"latest",phase:"executing",policy:policy,taskOrigin:.app,routingEvidence:routingEvidence)
         XCTAssertEqual(BackgroundExecutionPolicy.evaluate(checkpoint:executing,context:context),.reviewRequired(.unsafeExecutingCheckpoint))
         let locked=BackgroundExecutionContext(protectedDataAvailable:false,workspaceConnected:true,workspaceRequiresNetworkConnectivity:false,backgroundRefreshAvailable:true,nativeProviderAvailable:true,currentPolicy:policy)
         XCTAssertEqual(BackgroundExecutionPolicy.evaluate(checkpoint:checkpoint,context:locked),.deferred(.protectedDataUnavailable))

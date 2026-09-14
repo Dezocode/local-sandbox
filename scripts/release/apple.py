@@ -299,7 +299,6 @@ def main(arguments: list[str] | None = None) -> None:
             + [
                 "-destination",
                 "platform=iOS Simulator,id=" + options.simulator,
-                "CODE_SIGNING_ALLOWED=NO",
                 "test",
             ],
             cwd=ROOT,

@@ -1049,6 +1049,11 @@ test('Apple release workflow verifies everything before exposing the private key
   );
   assert.match(appleLocalSource, /REQUIRED_XCODE_VERSION = "27\.0"/);
   assert.match(appleLocalSource, /REQUIRED_XCODE_BUILD = "27A266a"/);
+  assert.doesNotMatch(
+    appleLocalSource,
+    /"CODE_SIGNING_ALLOWED=NO"/,
+    'simulator tests must retain Xcode simulated entitlements for Keychain coverage',
+  );
   assert.match(appleLocalSource, /readiness_json = os\.environ\.pop\(ACTION_READINESS_ENVIRONMENT, None\)/);
   assert.match(appleLocalSource, /with immutable_source_snapshot\(options\.release_commit/);
   assert.match(appleLocalSource, /recheck_release_xcode\(release_toolchain, child_environment\)/);
