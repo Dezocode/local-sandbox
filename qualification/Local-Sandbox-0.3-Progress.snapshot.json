@@ -1,7 +1,7 @@
 {
   "evidence": {
-    "rows": 109,
-    "sha256": "e9d0b0792f422181a480d6c7d83ce706b90db9af4aa5e8c126370c8320f5b61e"
+    "rows": 114,
+    "sha256": "16453339c12b4ffcaf7657862406e5705fb86edc29df5d8fa1ef0fe4ff036d66"
   },
   "gates": [
     {
@@ -86,7 +86,7 @@
       "dependencies": [
         "SRC-03"
       ],
-      "evidenceSha256": "72bd71b00027823a329e7ad2eaf29245ccb1b4c8312bfdf84560bb276b7965c1",
+      "evidenceSha256": "6fc7b08fc487fa66cafcf9c1ba15ac29b00bbbe2e44a73ee90c911b39e8dc966",
       "id": "BASE-01",
       "status": "PASS"
     },
@@ -103,7 +103,7 @@
         "BASE-01",
         "BASE-02"
       ],
-      "evidenceSha256": "2250f2f3518aec090966f6ae0852fa3896fe61475a0b695281f7db68997e9027",
+      "evidenceSha256": "1dce7036c41fc767204411c7dac676a6b3feeee86154528a96ff581808213838",
       "id": "BASE-03",
       "status": "PASS"
     },
@@ -332,7 +332,7 @@
         "BASE-01",
         "PKG-02"
       ],
-      "evidenceSha256": "e6eff4130457855dc008aa1eb590a7759e85137428fc3905f348ea66b1e90ab0",
+      "evidenceSha256": "d433cc7fca3a14b68650946734abff3f96191e03081ba80b7170cec197e65102",
       "id": "PWA-04",
       "status": "IN PROGRESS"
     },
@@ -350,7 +350,7 @@
         "NAT-03",
         "PWA-02"
       ],
-      "evidenceSha256": "384f4ee83bee589298fe5bb685cee7deb4f7a07469de90ab844a6936294c5d52",
+      "evidenceSha256": "f59b0c25741183485a2fbfbae2171e9b4aad114c8c35ec4a567da5ae94c57212",
       "id": "SYNC-01",
       "status": "IN PROGRESS"
     },
@@ -496,7 +496,7 @@
         "ICLOUD-01",
         "PRIV-01"
       ],
-      "evidenceSha256": "5398fc29749851564898ae116d071bdc5aefd7225e2f05a83a8f1b89d931608b",
+      "evidenceSha256": "509968465edcf8a853e447d845c326c7a173832d59769ea26843bbfc99eb0ead",
       "id": "REL-01",
       "status": "IN PROGRESS"
     },
@@ -567,12 +567,12 @@
   "recordType": "local-sandbox-qualification-snapshot",
   "requirements": {
     "rows": 57,
-    "sha256": "f45538d90bc9ad721262f2d17a5108ba0a7e8d04b4837134546745f5d08f6f66"
+    "sha256": "3689fdb5513252d13cdba59ab88aea34f5115e008bdea8a9c1ea2324deaa7812"
   },
   "schemaVersion": 1,
   "version": "0.3.0",
   "workbook": {
     "path": "qualification/Local-Sandbox-0.3-Progress.xlsx",
-    "sha256": "2df534767ff818df064df36c880fa0e97dac489b5521386f5d501db48094b3ca"
+    "sha256": "ab48fe7d07f9d8c71068ce9eadeb45af82c1559da7a2b6842f9c18ba7b85e089"
   }
 }
