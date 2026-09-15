@@ -1,7 +1,7 @@
 {
   "evidence": {
-    "rows": 154,
-    "sha256": "6ed91e9a913d33cabc52941eae4b333fc2e1d18676fa87330c6ba5796f02bad8"
+    "rows": 195,
+    "sha256": "587667c98c3cf29e832f24efa24e2cf70582e952a0e818c6ced2de797632d5ce"
   },
   "gates": [
     {
@@ -86,7 +86,7 @@
       "dependencies": [
         "SRC-03"
       ],
-      "evidenceSha256": "bdd62608273216243c85e85bd33687895053c9e9233fcaec9502b6528d81059e",
+      "evidenceSha256": "af81e64ce0141a8c57ae5406bbe6ddf2b9d86f96c4bd56a06be31bcd939c4356",
       "id": "BASE-01",
       "status": "PASS"
     },
@@ -103,7 +103,7 @@
         "BASE-01",
         "BASE-02"
       ],
-      "evidenceSha256": "a70a7390ddee262efbe5180dcfcbbac9ba06cc3ab91eb98276bb635f1e34ea36",
+      "evidenceSha256": "caa5a8d3ebf0da7496851ce4ebb6c305c332f4357463f536db5e574d780364bc",
       "id": "BASE-03",
       "status": "PASS"
     },
@@ -314,7 +314,7 @@
       "dependencies": [
         "PWA-01"
       ],
-      "evidenceSha256": "c1f8e034d024aa905c447efbdc6ecfdff72f7d1fcce8a06b071cccde3579d1f6",
+      "evidenceSha256": "ffcfcc5d8ad1544bea638eca5555e6e61a22dd51101df6f2f24b991131667f41",
       "id": "PWA-02",
       "status": "IN PROGRESS"
     },
@@ -323,7 +323,7 @@
         "PWA-01",
         "AUTOSAVE-01"
       ],
-      "evidenceSha256": "78b0a30a074f0fc8359a91aedea098c9bd13d9a79494649e6c479e84c8daef6f",
+      "evidenceSha256": "c5718b983605eb14c026c84c0aa7476c88869c2c5885ab9c80a8b166f5eafe05",
       "id": "PWA-03",
       "status": "IN PROGRESS"
     },
@@ -332,7 +332,7 @@
         "BASE-01",
         "PKG-02"
       ],
-      "evidenceSha256": "90f5f8e593e0c7d283544aa7ae3f7e4dc874a6653ad495b58b2b88b69ac0ea6e",
+      "evidenceSha256": "fd4d4ebe3ba76d79858729ff62196538724df37043f5125e142c323668ea67bc",
       "id": "PWA-04",
       "status": "IN PROGRESS"
     },
@@ -367,7 +367,7 @@
       "dependencies": [
         "SRC-03"
       ],
-      "evidenceSha256": "d949ccdaa1dc91c940afac837a78bc60ff8b0d230d37ac316bcfb2a1811291c9",
+      "evidenceSha256": "b5d4a09e3e6889cfb6bf4d41dd4163dedf85b93560b09c40a71dd92012bf0592",
       "id": "AUTOSAVE-01",
       "status": "IN PROGRESS"
     },
@@ -439,7 +439,7 @@
         "GH-02",
         "SYNC-01"
       ],
-      "evidenceSha256": "e29dcf47877a1ab626a3a52a3b18525cd22f5eaf392d6de79ba9c7861d062f8a",
+      "evidenceSha256": "9704156e4e11718aa638e919782ce6de6333a978d85136aa7d62eade6c4bd133",
       "id": "PRIV-01",
       "status": "IN PROGRESS"
     },
@@ -496,7 +496,7 @@
         "ICLOUD-01",
         "PRIV-01"
       ],
-      "evidenceSha256": "4a1f83e059fe8831e59188a08bd2f959d21bcd8d51637480b9912e5b99f208cc",
+      "evidenceSha256": "9cd48a95fd88e7aebfb9a0fd88e55cd3df23698c3f3e097fe582ebebf59e0987",
       "id": "REL-01",
       "status": "IN PROGRESS"
     },
@@ -567,12 +567,12 @@
   "recordType": "local-sandbox-qualification-snapshot",
   "requirements": {
     "rows": 57,
-    "sha256": "a2f267f5a77c6bacb87c9f7b96becc38af6cd20ec6d4bc9b91e9bf918db62c6a"
+    "sha256": "aedab7d6c484f776d2f662773da5be28172ceed1ed2188a004682c79d1f3b478"
   },
   "schemaVersion": 1,
   "version": "0.3.0",
   "workbook": {
     "path": "qualification/Local-Sandbox-0.3-Progress.xlsx",
-    "sha256": "7fcc65e7ffbc251bd39fb39b82ca2cfb815a41371207f5dc6c3e2cf4ca565cc1"
+    "sha256": "f822ae9a212ade3b068581b9abf571f0a020b6fc6a648e187467ab8dafe2ca74"
   }
 }
