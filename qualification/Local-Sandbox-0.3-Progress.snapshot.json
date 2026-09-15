@@ -1,7 +1,7 @@
 {
   "evidence": {
     "rows": 195,
-    "sha256": "587667c98c3cf29e832f24efa24e2cf70582e952a0e818c6ced2de797632d5ce"
+    "sha256": "d2571cdec4afd9f17077f127f17c78f4f35ebb0a0cd6843de49a0fa5f2bb02e3"
   },
   "gates": [
     {
@@ -86,7 +86,7 @@
       "dependencies": [
         "SRC-03"
       ],
-      "evidenceSha256": "af81e64ce0141a8c57ae5406bbe6ddf2b9d86f96c4bd56a06be31bcd939c4356",
+      "evidenceSha256": "d34c811a62717b76a8aba75dad09741aae7a31edc92386a15d3bed2933611004",
       "id": "BASE-01",
       "status": "PASS"
     },
@@ -103,7 +103,7 @@
         "BASE-01",
         "BASE-02"
       ],
-      "evidenceSha256": "caa5a8d3ebf0da7496851ce4ebb6c305c332f4357463f536db5e574d780364bc",
+      "evidenceSha256": "18bd0d6fb971536e46701e61564b06edfe0a42f83b20cb168e6d13c8962dbba1",
       "id": "BASE-03",
       "status": "PASS"
     },
@@ -332,7 +332,7 @@
         "BASE-01",
         "PKG-02"
       ],
-      "evidenceSha256": "fd4d4ebe3ba76d79858729ff62196538724df37043f5125e142c323668ea67bc",
+      "evidenceSha256": "3780f15c62bc38f28535bbdbac21f76dc3e1d59e1acdfe9dfa7ce2c3f52e4c86",
       "id": "PWA-04",
       "status": "IN PROGRESS"
     },
@@ -496,7 +496,7 @@
         "ICLOUD-01",
         "PRIV-01"
       ],
-      "evidenceSha256": "9cd48a95fd88e7aebfb9a0fd88e55cd3df23698c3f3e097fe582ebebf59e0987",
+      "evidenceSha256": "1a157ff190423035b4a57222576881294aacf221208a4c9a017eaf2d89ca87ed",
       "id": "REL-01",
       "status": "IN PROGRESS"
     },
@@ -567,12 +567,12 @@
   "recordType": "local-sandbox-qualification-snapshot",
   "requirements": {
     "rows": 57,
-    "sha256": "aedab7d6c484f776d2f662773da5be28172ceed1ed2188a004682c79d1f3b478"
+    "sha256": "f898bbffd8d1093f07431e4b374a1e69485e91e16a24bd67c857db0e9ef31908"
   },
   "schemaVersion": 1,
   "version": "0.3.0",
   "workbook": {
     "path": "qualification/Local-Sandbox-0.3-Progress.xlsx",
-    "sha256": "f822ae9a212ade3b068581b9abf571f0a020b6fc6a648e187467ab8dafe2ca74"
+    "sha256": "38ad44b78f002963e00a48f256b79334c043e01aea109179f5b3f4325cc08224"
   }
 }
