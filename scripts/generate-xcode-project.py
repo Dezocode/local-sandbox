@@ -63,7 +63,7 @@ info={'CFBundleDevelopmentRegion':'en','CFBundleDisplayName':'Local Sandbox','CF
 (app/'LocalSandbox.entitlements').write_bytes(plistlib.dumps({
     'com.apple.developer.applesignin':['Default'],
 }))
-privacy={'NSPrivacyTracking':False,'NSPrivacyTrackingDomains':[],'NSPrivacyCollectedDataTypes':[],'NSPrivacyAccessedAPITypes':[{'NSPrivacyAccessedAPIType':'NSPrivacyAccessedAPICategoryUserDefaults','NSPrivacyAccessedAPITypeReasons':['CA92.1']},{'NSPrivacyAccessedAPIType':'NSPrivacyAccessedAPICategoryFileTimestamp','NSPrivacyAccessedAPITypeReasons':['C617.1']}]}
+privacy={'NSPrivacyTracking':False,'NSPrivacyTrackingDomains':[],'NSPrivacyCollectedDataTypes':[{'NSPrivacyCollectedDataType':'NSPrivacyCollectedDataTypeUserID','NSPrivacyCollectedDataTypeLinked':True,'NSPrivacyCollectedDataTypeTracking':False,'NSPrivacyCollectedDataTypePurposes':['NSPrivacyCollectedDataTypePurposeAppFunctionality']}],'NSPrivacyAccessedAPITypes':[{'NSPrivacyAccessedAPIType':'NSPrivacyAccessedAPICategoryUserDefaults','NSPrivacyAccessedAPITypeReasons':['CA92.1']},{'NSPrivacyAccessedAPIType':'NSPrivacyAccessedAPICategoryFileTimestamp','NSPrivacyAccessedAPITypeReasons':['C617.1']}]}
 (app/'PrivacyInfo.xcprivacy').write_bytes(plistlib.dumps(privacy))
 assets=app/'Assets.xcassets/AppIcon.appiconset';assets.mkdir(parents=True,exist_ok=True)
 (assets.parent/'Contents.json').write_text(json.dumps({'info':{'author':'xcode','version':1}}))

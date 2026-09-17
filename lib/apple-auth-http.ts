@@ -61,7 +61,7 @@ export function appleAuthErrorResponse(error: unknown, additionalHeaders?: Heade
   if (!(error instanceof AppleAuthError)) {
     console.error(JSON.stringify({
       event: 'apple_auth_failed',
-      error: error instanceof Error ? error.message : 'Unknown failure',
+      code: 'APPLE_AUTH_UNAVAILABLE',
     }));
   }
   const headers = new Headers(additionalHeaders);

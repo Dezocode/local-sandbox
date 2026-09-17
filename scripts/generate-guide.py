@@ -3,6 +3,7 @@ from importlib.resources import files as resource_files
 from pathlib import Path
 from reportlab.pdfgen import canvas
 from reportlab.lib.colors import HexColor
+from reportlab.lib.utils import ImageReader
 from reportlab.platypus import Paragraph
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
@@ -40,7 +41,7 @@ def start(title,sub,pills,sidebar):
     if page:c.showPage()
     page+=1;c.setFillColor(INK);c.setFont('GuideBold',25 if len(title)<31 else 21);c.drawString(42,746,title)
     para(sub,43,722,526,small)
-    if title=='Local Sandbox':c.drawImage(str(ROOT/'public/app-icon.png'),510,735,58,58,mask='auto')
+    if title=='Local Sandbox':c.drawImage(ImageReader(str(ROOT/'public/app-icon.png')),510,735,58,58,mask='auto')
     x=43
     for pill in pills:
         c.setStrokeColor(LINE);c.setLineWidth(.6);c.roundRect(x,666,123,23,11);c.setFillColor(MUTED);c.setFont('Guide',8);c.drawString(x+8,674,pill);x+=132

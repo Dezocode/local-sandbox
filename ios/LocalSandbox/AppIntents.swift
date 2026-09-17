@@ -248,15 +248,8 @@ struct BeginProviderQualificationIntent: AppIntent {
         guard let exact = provider.explicitProvider, exact != .apple else {
             throw SandboxError.blocked("Choose Locally, ChatGPT, Grok, Grokbot, or Claude. Run Apple checks from Local Sandbox.")
         }
-        guard let data = UserDefaults.standard.data(forKey: "policy") else {
-            throw SandboxError.blocked("Save authorization in Local Sandbox first.")
-        }
-        let policy = try JSONDecoder().decode(ResourcePolicy.self, from: data).validated()
-        guard !exact.usesCloud || policy.cloudAllowed else {
-            throw SandboxError.blocked("Authorize cloud app handoffs in Settings first.")
-        }
         try continuationValidator.beforePersistence()
-        let challenge = try ProviderQualificationStore.begin(provider: exact, contextCharacters: policy.contextChars, appIntentTransportObserved: true)
+        let challenge = try ProviderQualificationStore.externalChallenge(provider: exact, appIntentTransportObserved: true)
         let output = ProviderQualificationIntentOutput(
             provider: exact,
             probe: challenge.probe,

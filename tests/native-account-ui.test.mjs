@@ -72,6 +72,43 @@ function assertAuthenticatedEntry(source, startMarker, endMarker, actionMarker, 
   ], `${label} must retain its tap-time generation through local authentication`);
 }
 
+test('provider qualification UI and App Intent share saved authorization before prompt output', () => {
+  const ui = sourceSlice(app, 'private func startQualification()', 'private func completeQualification()', 'provider qualification handoff');
+  assertInOrder(ui, [
+    'ProviderQualificationStore.requireSavedAuthorization(for:provider)',
+    'AdapterSettings.save(adapter,for:provider)',
+    'ProviderQualificationStore.externalChallenge(provider:provider,pendingAttemptID:pending?.attemptID)',
+    'AdapterSettings.runURL(name:name,input:challenge.prompt)',
+    'openURL(url)',
+  ], 'UI qualification must check saved consent and reread the pending challenge before handoff');
+  assert.doesNotMatch(ui, /pending\s*\?\?|model\.policy\.contextChars/);
+  const intent = sourceSlice(intents, 'struct BeginProviderQualificationIntent:', 'struct RecordProviderQualificationIntent:', 'provider qualification App Intent');
+  assertInOrder(intent, [
+    'continuationValidator.beforePersistence()',
+    'ProviderQualificationStore.externalChallenge(provider: exact, appIntentTransportObserved: true)',
+    'payload: challenge.prompt',
+    'continuationValidator.requireCurrent()',
+    'return .result',
+  ], 'App Intent qualification must authorize before creating its output');
+  const entry = sourceSlice(qualification, 'static func externalChallenge(', 'static func begin(', 'shared external qualification admission');
+  assert.match(entry, /try ProviderQualificationStore\.pending\(provider: \$0\)/);
+  assertInOrder(entry, [
+    'let policy = try requireSavedAuthorization(for: provider)',
+    'try loadPending(provider)',
+    'challenge.attemptID == pendingAttemptID',
+    'challenge.prompt.count <= contextCharacters',
+    'return challenge',
+  ], 'pending output must use current protected ledger and saved cap');
+  const begin = sourceSlice(qualification, 'static func begin(', '@discardableResult\n    static func complete(', 'provider qualification begin');
+  assertInOrder(begin, [
+    'try requireSavedAuthorization(for: provider)',
+    'min(contextCharacters, policy.contextChars)',
+    'qualificationActive',
+    'var ledger = try load(now: now)',
+    'try save(ledger)',
+  ], 'direct external qualification cannot persist before saved authorization');
+});
+
 test('native Sign in with Apple binds a random raw nonce and keeps local access local-first', () => {
   assert.match(app, /rawNonce\s*=\s*try NativeAppleNonce\.make\(\)/);
   assert.match(app, /request\.nonce\s*=\s*try NativeAppleNonce\.requestHash\(rawNonce\)/);
@@ -1005,7 +1042,8 @@ test('provider qualification is measured, device-local, tamper-evident, and dete
   assert.match(intents, /struct RecordProviderQualificationIntent: AppIntent/);
   assert.match(intents, /struct ConfigureOracleRoutingIntent: AppIntent/);
   assert.match(intents, /ProviderQualificationStore\.complete\(attemptID: attemptID, provider: exact, response: response, appIntentTransportObserved: true\)/);
-  assert.match(intents, /ProviderQualificationStore\.begin\(provider: exact, contextCharacters: policy\.contextChars, appIntentTransportObserved: true\)/);
+  assert.match(intents, /ProviderQualificationStore\.externalChallenge\(provider: exact, appIntentTransportObserved: true\)/);
+  assert.match(qualification, /return try createChallenge\(provider, contextCharacters, appIntentTransportObserved\)/);
   assert.match(intents, /record that it reached this App Intent/);
   assert.match(intents, /This does not prove unattended execution, provider identity, account state, or model provenance/);
   assert.match(qualification, /attempt\.appIntentReturnObserved = attempt\.appIntentReturnObserved && appIntentTransportObserved/);

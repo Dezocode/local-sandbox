@@ -547,6 +547,48 @@ enum ProviderQualificationStore {
         NativeDigest.sha256("name=\(adapter.name)|mode=\(adapter.mode)")
     }
 
+    static func requireSavedAuthorization(for provider: AppProvider) throws -> ResourcePolicy {
+        let policy = try SavedExecutionAuthorization.load()
+        guard !provider.usesCloud || policy.cloudAllowed else {
+            throw SandboxError.blocked("Authorize cloud app handoffs in Settings first.")
+        }
+        return policy
+    }
+
+    static func externalChallenge(
+        provider: AppProvider,
+        pendingAttemptID: String? = nil,
+        appIntentTransportObserved: Bool = false,
+        loadPending: @MainActor (AppProvider) throws -> ProviderQualificationChallenge? = {
+            try ProviderQualificationStore.pending(provider: $0)
+        },
+        createChallenge: @MainActor (AppProvider, Int, Bool) throws -> ProviderQualificationChallenge = {
+            try ProviderQualificationStore.begin(
+                provider: $0,
+                contextCharacters: $1,
+                appIntentTransportObserved: $2
+            )
+        }
+    ) throws -> ProviderQualificationChallenge {
+        guard provider != .apple else {
+            throw SandboxError.blocked("Run Apple checks through the Apple qualification App Intent.")
+        }
+        let policy = try requireSavedAuthorization(for: provider)
+        let contextCharacters = min(policy.contextChars, ProviderQualificationSnapshot.maximumSupportedContextCharacters)
+        if let pendingAttemptID {
+            guard let challenge = try loadPending(provider),
+                  challenge.provider == provider,
+                  challenge.attemptID == pendingAttemptID else {
+                throw SandboxError.blocked("PROVIDER_CHECK_CHANGED: Refresh the pending check for the current Shortcut configuration.")
+            }
+            guard challenge.prompt.count <= contextCharacters else {
+                throw SandboxError.blocked("PROVIDER_CHECK_EXCEEDS_SAVED_CONTEXT: Restore the saved prompt cap or wait for this check to expire before starting another.")
+            }
+            return challenge
+        }
+        return try createChallenge(provider, contextCharacters, appIntentTransportObserved)
+    }
+
     static func begin(
         provider: AppProvider,
         contextCharacters: Int,
@@ -554,6 +596,13 @@ enum ProviderQualificationStore {
         withinAppleSuite: Bool = false,
         now: Date = Date()
     ) throws -> ProviderQualificationChallenge {
+        let authorizedContextCharacters: Int
+        if provider == .apple {
+            authorizedContextCharacters = contextCharacters
+        } else {
+            let policy = try requireSavedAuthorization(for: provider)
+            authorizedContextCharacters = min(contextCharacters, policy.contextChars)
+        }
         guard Keychain.get("appleUser") != nil, SandboxStore.shared.connected else {
             throw SandboxError.blocked("SIGN_IN_AND_PREPARE_PROTECTED_WORKSPACE_FIRST")
         }
@@ -564,7 +613,7 @@ enum ProviderQualificationStore {
         if let session = ShortcutCoordinator.shared.current(), ["awaiting_response", "applying"].contains(session.phase) {
             throw SandboxError.blocked("FINISH_PENDING_APP_HANDOFF_FIRST")
         }
-        let boundedContext = min(max(contextCharacters, 2_000), ProviderQualificationSnapshot.maximumSupportedContextCharacters)
+        let boundedContext = min(max(authorizedContextCharacters, 2_000), ProviderQualificationSnapshot.maximumSupportedContextCharacters)
         let adapter: ShortcutAdapter?
         if provider == .apple {
             guard ProviderRuntimeCapabilities.appleModel == .available else {

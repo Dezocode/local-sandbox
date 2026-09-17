@@ -75,12 +75,13 @@ const worker = {
         ...result,
       }));
       if (nativeGrantFailure !== null) throw nativeGrantFailure;
-    } catch (error) {
+    } catch {
       console.error(JSON.stringify({
         event: 'apple-auth-retention-failed',
-        message: error instanceof Error ? error.message : 'Unknown retention failure',
+        code: 'APPLE_AUTH_RETENTION_FAILED',
       }));
-      throw error;
+      // The runtime may log uncaught errors; never retain the original error or cause.
+      throw new Error('APPLE_AUTH_RETENTION_FAILED');
     }
   },
 } satisfies ExportedHandler<Cloudflare.Env>;

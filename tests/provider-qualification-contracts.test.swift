@@ -450,6 +450,143 @@ enum ProviderQualificationLedgerContracts {
     }
 
     @MainActor
+    static func testExternalQualificationAuthorization() throws {
+        let defaults = UserDefaults.standard
+        let previousPolicy = defaults.object(forKey: "policy")
+        defer {
+            if let previousPolicy { defaults.set(previousPolicy, forKey: "policy") }
+            else { defaults.removeObject(forKey: "policy") }
+        }
+        let ledgerURL = try FileManager.default.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: false
+        ).appendingPathComponent("LocalSandboxPrivateRouting/provider-qualification-ledger.json")
+        let ledgerExisted = FileManager.default.fileExists(atPath: ledgerURL.path)
+        let ledgerBefore = ledgerExisted ? try Data(contentsOf: ledgerURL) : nil
+        let cloudProviders: [AppProvider] = [.chatgpt, .grok, .grokbot, .claude]
+        let pendingID = "00000000-0000-4000-8000-000000000099"
+        var pendingReads = 0
+        var creations = 0
+        var handedOff = 0
+        var saved = ResourcePolicy()
+        saved.contextChars = 2_000
+        var unsavedDraft = saved
+        unsavedDraft.cloudAllowed = true
+        unsavedDraft.contextChars = 12_000
+        try check(unsavedDraft.cloudAllowed, "unsaved draft fixture does not enable cloud")
+
+        func authorize(_ provider: AppProvider, pending: String? = nil) throws -> ProviderQualificationChallenge {
+            let challenge = try ProviderQualificationStore.externalChallenge(
+                provider: provider,
+                pendingAttemptID: pending,
+                appIntentTransportObserved: true,
+                loadPending: { requested in
+                    pendingReads += 1
+                    return ProviderQualificationChallenge(
+                        attemptID: pendingID,
+                        provider: requested,
+                        probe: .strictJSON,
+                        adapterName: requested.shortcut,
+                        prompt: "current protected-store challenge"
+                    )
+                },
+                createChallenge: { requested, context, observed in
+                    creations += 1
+                    try check(context == saved.contextChars, "qualification used the unsaved draft context cap")
+                    try check(observed, "App Intent transport marker was lost")
+                    return ProviderQualificationChallenge(
+                        attemptID: pendingID,
+                        provider: requested,
+                        probe: .strictJSON,
+                        adapterName: requested.shortcut,
+                        prompt: "new authorized challenge"
+                    )
+                }
+            )
+            handedOff += 1
+            return challenge
+        }
+
+        for policyData: Data? in [nil, Data("malformed policy".utf8), try JSONEncoder().encode(saved)] {
+            if let policyData { defaults.set(policyData, forKey: "policy") }
+            else { defaults.removeObject(forKey: "policy") }
+            for provider in cloudProviders {
+                for pending: String? in [nil, pendingID] {
+                    do {
+                        _ = try authorize(provider, pending: pending)
+                        throw InjectedFailure.write
+                    } catch is SandboxError {}
+                }
+                do {
+                    _ = try ProviderQualificationStore.begin(provider: provider, contextCharacters: unsavedDraft.contextChars)
+                    throw InjectedFailure.write
+                } catch is SandboxError {}
+            }
+        }
+        try check(pendingReads == 0 && creations == 0 && handedOff == 0,
+                  "denied, missing, or malformed saved authorization reached the ledger or handoff")
+        try check(FileManager.default.fileExists(atPath: ledgerURL.path) == ledgerExisted,
+                  "denied qualification created or removed the protected ledger")
+        if let ledgerBefore {
+            let ledgerAfter = try Data(contentsOf: ledgerURL)
+            try check(ledgerAfter == ledgerBefore,
+                      "denied qualification changed protected ledger bytes")
+        }
+
+        defaults.set(try JSONEncoder().encode(saved), forKey: "policy")
+        let local = try authorize(.local)
+        try check(local.provider == .local && creations == 1 && handedOff == 1,
+                  "saved local-only authorization no longer admits Locally")
+        saved.cloudAllowed = true
+        defaults.set(try JSONEncoder().encode(saved), forKey: "policy")
+        for provider in cloudProviders {
+            let cloud = try authorize(provider)
+            try check(cloud.provider == provider, "allowed cloud provider was changed")
+        }
+        let pending = try authorize(.chatgpt, pending: pendingID)
+        try check(pending.prompt == "current protected-store challenge" && pendingReads == 1,
+                  "pending handoff did not reread its protected-store challenge")
+
+        let readsBeforeRevocation = pendingReads
+        let creationsBeforeRevocation = creations
+        let handoffsBeforeRevocation = handedOff
+        saved.cloudAllowed = false
+        defaults.set(try JSONEncoder().encode(saved), forKey: "policy")
+        do {
+            _ = try authorize(.chatgpt, pending: pendingID)
+            throw InjectedFailure.write
+        } catch is SandboxError {}
+        try check(pendingReads == readsBeforeRevocation && creations == creationsBeforeRevocation && handedOff == handoffsBeforeRevocation,
+                  "revoked pending cloud qualification read, rewrote, or handed off its challenge")
+
+        saved.cloudAllowed = true
+        defaults.set(try JSONEncoder().encode(saved), forKey: "policy")
+        for retainedChallenge: ProviderQualificationChallenge? in [
+            nil,
+            ProviderQualificationChallenge(attemptID: "changed-attempt", provider: .chatgpt, probe: .strictJSON, adapterName: AppProvider.chatgpt.shortcut, prompt: "current"),
+            ProviderQualificationChallenge(attemptID: pendingID, provider: .claude, probe: .strictJSON, adapterName: AppProvider.claude.shortcut, prompt: "current"),
+            ProviderQualificationChallenge(attemptID: pendingID, provider: .chatgpt, probe: .boundedContext, adapterName: AppProvider.chatgpt.shortcut, prompt: String(repeating: "x", count: saved.contextChars + 1)),
+        ] {
+            do {
+                _ = try ProviderQualificationStore.externalChallenge(
+                    provider: .chatgpt,
+                    pendingAttemptID: pendingID,
+                    loadPending: { _ in retainedChallenge },
+                    createChallenge: { _, _, _ in
+                        creations += 1
+                        throw InjectedFailure.write
+                    }
+                )
+                throw InjectedFailure.write
+            } catch is SandboxError {}
+        }
+        try check(creations == creationsBeforeRevocation,
+                  "stale, mismatched, or oversized pending challenge created a replacement")
+    }
+
+    @MainActor
     static func main() async throws {
         let key = SymmetricKey(data: Data(repeating: 0xA5, count: 32))
         let now = Date(timeIntervalSince1970: 1_788_921_600)
@@ -655,10 +792,11 @@ enum ProviderQualificationLedgerContracts {
         )
 
         try testSigningKeyTransactions()
+        try testExternalQualificationAuthorization()
         try testCompletionTransactions(now: now)
         try await testAppleProbePersistenceFailuresPropagate()
         try testResetTransactions()
 
-        print("Provider qualification contracts passed: exact signed schemas, fail-closed migration, checked signing-key creation, durable probe failures, retryable two-phase completion, fifth-probe admission, and checked reset.")
+        print("Provider qualification contracts passed: exact signed schemas, fail-closed migration, checked signing-key creation, saved qualification authorization and pending handoff admission, durable probe failures, retryable two-phase completion, fifth-probe admission, and checked reset.")
     }
 }

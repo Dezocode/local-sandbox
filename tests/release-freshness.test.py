@@ -5,12 +5,14 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 
 from pypdf import PdfReader
+from PIL import Image
 from reportlab.pdfgen import canvas
 
 
@@ -29,11 +31,11 @@ from release.check_freshness import (
 )
 
 
-def generate(output: Path) -> None:
+def generate(output: Path, *, root: Path = ROOT) -> None:
     environment = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
     subprocess.run(
         [sys.executable, "scripts/generate-guide.py", "--output", str(output)],
-        cwd=ROOT,
+        cwd=root,
         env=environment,
         check=True,
         capture_output=True,
@@ -42,6 +44,27 @@ def generate(output: Path) -> None:
 
 
 class ReleaseFreshnessTests(unittest.TestCase):
+    def test_guide_bytes_do_not_depend_on_checkout_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            temporary = Path(temporary_directory)
+            outputs = []
+            for checkout in [temporary / "authoring", temporary / "ci/runner/local-sandbox"]:
+                for relative in ["scripts/generate-guide.py", "lib/catalog.ts", "public/app-icon.png"]:
+                    destination = checkout / relative
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(ROOT / relative, destination)
+                output = checkout / "guide.pdf"
+                generate(output, root=checkout)
+                self.assertEqual(validate_guide(output)["pages"], EXPECTED_GUIDE_PAGES)
+                reader = PdfReader(output, strict=True)
+                self.assertEqual(len(reader.pages[0].images), 1)
+                embedded_icon = reader.pages[0].images[0].image.convert("RGBA")
+                with Image.open(ROOT / "public/app-icon.png") as source_icon:
+                    self.assertEqual(embedded_icon.size, source_icon.size)
+                    self.assertEqual(embedded_icon.tobytes(), source_icon.convert("RGBA").tobytes())
+                outputs.append(output.read_bytes())
+            self.assertEqual(outputs[0], outputs[1])
+
     def test_guide_is_deterministic_and_structurally_current(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             temporary = Path(temporary_directory)
