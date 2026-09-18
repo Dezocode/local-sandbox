@@ -256,6 +256,8 @@ async function runPortableNativeChecks() {
     'ios/LocalSandbox/ProviderRoutingCore.swift',
     'ios/LocalSandbox/BackgroundExecution.swift',
     'ios/LocalSandbox/Keychain.swift',
+    'ios/LocalSandbox/ProviderSharingConsentCore.swift',
+    'tests/provider-sharing-consent.test.swift',
     'tests/native-core.test.swift',
     '-o', '.sites-runtime/native-core-tests',
   ]);
@@ -275,6 +277,8 @@ async function runPortableNativeChecks() {
     'ios/LocalSandbox/Models.swift',
     'ios/LocalSandbox/ProviderRoutingCore.swift',
     'ios/LocalSandbox/NativeExecutionCore.swift',
+    'ios/LocalSandbox/ProviderSharingConsentCore.swift',
+    'ios/LocalSandbox/ProviderSharingConsent.swift',
     'ios/LocalSandbox/ProviderQualification.swift',
     'tests/provider-qualification-stubs.swift',
   ]);
@@ -283,6 +287,8 @@ async function runPortableNativeChecks() {
     'ios/LocalSandbox/Models.swift',
     'ios/LocalSandbox/ProviderRoutingCore.swift',
     'ios/LocalSandbox/NativeExecutionCore.swift',
+    'ios/LocalSandbox/ProviderSharingConsentCore.swift',
+    'ios/LocalSandbox/ProviderSharingConsent.swift',
     'ios/LocalSandbox/ProviderQualification.swift',
     'tests/provider-qualification-stubs.swift',
     'tests/provider-qualification-contracts.test.swift',

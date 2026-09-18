@@ -22,8 +22,35 @@ jobs:
       - name: Run portable web contract suites
         run: node scripts/verify-release.mjs --portable-web-only
   native:
-    runs-on: macos-latest
+    runs-on: xcode-27
     steps:
+      - name: Verify native CI toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOCAL_SANDBOX_XCODE_OUTPUT=$(xcodebuild -version)
+          printf '%s\n' "$LOCAL_SANDBOX_XCODE_OUTPUT"
+          xcodebuild -showsdks
+          LOCAL_SANDBOX_SWIFT_OUTPUT=$(xcrun swiftc --version)
+          printf '%s\n' "$LOCAL_SANDBOX_SWIFT_OUTPUT"
+          LOCAL_SANDBOX_IOS_SDK=$(xcrun --sdk iphoneos --show-sdk-version)
+          LOCAL_SANDBOX_SIMULATOR_SDK=$(xcrun --sdk iphonesimulator --show-sdk-version)
+          printf 'Selected iOS SDK: %s\nSelected Simulator SDK: %s\n' "$LOCAL_SANDBOX_IOS_SDK" "$LOCAL_SANDBOX_SIMULATOR_SDK"
+          python3 - "$LOCAL_SANDBOX_XCODE_OUTPUT" "$LOCAL_SANDBOX_SWIFT_OUTPUT" "$LOCAL_SANDBOX_IOS_SDK" "$LOCAL_SANDBOX_SIMULATOR_SDK" <<'PY'
+          import re, sys
+          xcode, swift, ios_sdk, simulator_sdk = sys.argv[1:]
+          xcode_version = re.fullmatch(r"Xcode (\d+)(?:\.\d+){0,2}(?: beta \d+| RC)?\nBuild version [A-Za-z0-9]+", xcode)
+          swift_version = re.search(r"(?:Apple )?Swift version (\d+)\.\d+", swift)
+          if xcode_version is None or int(xcode_version[1]) < 27:
+              raise SystemExit("Native CI requires Xcode 27 or later for the complete iOS 27 App Intents source.")
+          if swift_version is None or int(swift_version[1]) < 6:
+              raise SystemExit("Native CI requires a Swift 6 or later compiler.")
+          for name, version in (("iOS", ios_sdk), ("Simulator", simulator_sdk)):
+              match = re.fullmatch(r"(\d+)(?:\.\d+){0,2}", version)
+              if match is None or int(match[1]) < 27:
+                  raise SystemExit(f"Native CI requires a {name} SDK version of 27 or later.")
+          print("Supplemental native CI toolchain accepted; exact-RC archive/upload qualification is separate.")
+          PY
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
@@ -51,4 +78,4 @@ jobs:
         run: |
           LOCAL_SANDBOX_SIMULATOR=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); rows=[v for k,a in d["devices"].items() if "iOS-26" in k or "iOS-27" in k for v in a if "iPhone" in v["name"]]; print(rows[0]["udid"] if rows else "")')
           test -n "$LOCAL_SANDBOX_SIMULATOR"
-          xcodebuild -project ios/LocalSandbox.xcodeproj -scheme LocalSandbox -destination "platform=iOS Simulator,id=$LOCAL_SANDBOX_SIMULATOR" CODE_SIGNING_ALLOWED=NO test
+          python3 scripts/release/apple.py test --simulator "$LOCAL_SANDBOX_SIMULATOR"

@@ -250,6 +250,7 @@ struct BeginProviderQualificationIntent: AppIntent {
         }
         try continuationValidator.beforePersistence()
         let challenge = try ProviderQualificationStore.externalChallenge(provider: exact, appIntentTransportObserved: true)
+        try ProviderSharingConsent.requireQualification(challenge)
         let output = ProviderQualificationIntentOutput(
             provider: exact,
             probe: challenge.probe,

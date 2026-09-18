@@ -23,6 +23,7 @@ enum ProviderRuntimeCapabilities {
 @MainActor
 enum AdapterSettings {
     private static var values: [AppProvider: ShortcutAdapter] = [:]
+    static var failMeasuredRoundTrip = false
 
     static func get(_ provider: AppProvider) -> ShortcutAdapter {
         values[provider] ?? ShortcutAdapter(name: provider.shortcut)
@@ -33,6 +34,7 @@ enum AdapterSettings {
     }
 
     static func markMeasuredRoundTrip(for provider: AppProvider) throws {
+        if failMeasuredRoundTrip { throw SandboxError.blocked("MEASURED_WRITE_INJECTED") }
         var value = get(provider)
         value.tested = true
         values[provider] = value

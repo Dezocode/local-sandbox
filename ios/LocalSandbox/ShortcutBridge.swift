@@ -77,6 +77,7 @@ enum ProviderRuntimeCapabilities {
                 evidence: nil
             )
         }
+        if route.provider != .apple, route.decision.isRunnable { _ = try ProviderSharingConsent.require(route.provider) }
         return route
     }
 
@@ -99,10 +100,12 @@ enum ProviderRuntimeCapabilities {
         ) else {
             throw SandboxError.blocked("ORACLE_RECOMMENDATION_NEEDS_FRESH_CHECKS: Qualify at least one eligible provider with all five probe types, at least 80 percent locally schema-valid responses, at least 80 percent exact assertion passes, sufficient tested context and tool probes, zero integrity faults, and an observed App Intent return path for Siri. Confirm unattended provider and model operation on the physical device.")
         }
+        if provider != .apple { _ = try ProviderSharingConsent.require(provider) }
         return provider
     }
 
     static func validateActiveExternalRoute(_ session: ShortcutSession) throws {
+        try ProviderSharingConsent.requireSession(session)
         let expectedActivity: ProviderActivitySignal = session.phase == "applying" ? .applyingProviderResponse : .providerResponsePending
         guard activity == expectedActivity else {
             throw SandboxError.blocked("PROVIDER_ROUTE_EVIDENCE_CHANGED_RESTART_TASK")
@@ -176,14 +179,43 @@ extension AppProvider {
         return (try? String(decoding:JSONSerialization.data(withJSONObject:report,options:[.sortedKeys]),as:UTF8.self)) ?? "{}"
     }
     static func get(_ provider: AppProvider) -> ShortcutAdapter {
-        if let data=UserDefaults.standard.data(forKey:"adapter.\(provider.rawValue)"),let value=try? JSONDecoder().decode(ShortcutAdapter.self,from:data){return value}
-        if SandboxStore.shared.connected,let values=try? SandboxStore.shared.load([String:ShortcutAdapter].self,path:"config/app-adapters.json"),var value=values[provider.rawValue]{value.tested=false;return value}
+        let value = raw(provider)
+        if provider != .apple {
+            // Viewing or restoring an effective imported configuration also retires old permission.
+            do { try ProviderSharingConsent.vault.reconcile(ProviderSharingConfiguration(provider: provider, adapter: value)) }
+            catch {
+                // Malformed effective imports also retire the previous valid configuration.
+                // Admission repeats checked state and reports any retained storage failure.
+                try? ProviderSharingConsent.vault.withdraw(provider)
+            }
+        }
+        return value
+    }
+    private static func raw(_ provider: AppProvider) -> ShortcutAdapter {
+        if let stored=UserDefaults.standard.object(forKey:"adapter.\(provider.rawValue)") {
+            guard let data=stored as? Data,let value=try? JSONDecoder().decode(ShortcutAdapter.self,from:data) else {return ShortcutAdapter(name: "")}
+            return value
+        }
+        if SandboxStore.shared.connected {
+            do {
+                if try SandboxStore.shared.list("config").contains("config/app-adapters.json") {
+                    let values = try SandboxStore.shared.load([String:ShortcutAdapter].self, path: "config/app-adapters.json")
+                    guard var value = values[provider.rawValue] else {
+                        try? ProviderSharingConsent.vault.withdraw(provider)
+                        return ShortcutAdapter(name: provider.shortcut)
+                    }
+                    value.tested = false
+                    return value
+                }
+            } catch { return ShortcutAdapter(name: "") }
+        }
         return ShortcutAdapter(name:provider.shortcut)
     }
     static func save(_ value:ShortcutAdapter,for provider:AppProvider) throws {
         guard !value.name.isEmpty,value.name.count<=80,["action","manual"].contains(value.mode) else {throw SandboxError.invalid("Invalid Shortcut configuration.")}
         if !value.installURL.isEmpty {guard let url=URL(string:value.installURL),url.scheme=="https",url.host=="www.icloud.com",url.path.range(of:"^/shortcuts/[a-fA-F0-9]{32}$",options:.regularExpression) != nil else {throw SandboxError.invalid("Use a shared iCloud Shortcut link.")}}
         let previous=get(provider)
+        if provider != .apple { try ProviderSharingConsent.vault.reconcile(ProviderSharingConfiguration(provider: provider, adapter: value)) }
         var stored=value
         if ProviderQualificationStore.adapterSHA256(previous) != ProviderQualificationStore.adapterSHA256(value) || !previous.tested {
             stored.tested=false
@@ -216,11 +248,28 @@ extension AppProvider {
         var url=URLComponents();url.scheme="shortcuts";url.host="run-shortcut";url.queryItems=[URLQueryItem(name:"name",value:name),URLQueryItem(name:"input",value:"text"),URLQueryItem(name:"text",value:input)];return url.url
     }
 }
+struct CheckedProviderHandoff {
+    let provider: AppProvider
+    let selection: ProviderSelection
+    let adapterName: String
+    let payload: String
+}
 @MainActor final class ShortcutCoordinator {
+    typealias ExecuteAction = @MainActor (ToolCall, String, ResourcePolicy, ToolEvidence?, @MainActor () throws -> Void) async throws -> ToolResult
     static let shared=ShortcutCoordinator()
     private let store=SandboxStore.shared
     private var applying=false
-    func current()->ShortcutSession? {try? store.load(ShortcutSession.self,path:"state/shortcut-session.json")}
+    private let validateRoute: @MainActor (ShortcutSession) throws -> Void
+    private let readSession: @MainActor () -> ShortcutSession?
+    private let executeAction: ExecuteAction
+    private let readSnapshot: @MainActor () -> DeviceSnapshot
+    init(validateRoute: @escaping @MainActor (ShortcutSession) throws -> Void = ProviderRuntimeCapabilities.validateActiveExternalRoute,
+         readSession: @escaping @MainActor () -> ShortcutSession? = { try? SandboxStore.shared.load(ShortcutSession.self, path: "state/shortcut-session.json") },
+         readSnapshot: @escaping @MainActor () -> DeviceSnapshot = DeviceSnapshot.read,
+         executeAction: @escaping ExecuteAction = { try await Dispatcher.shared.execute($0, callID: $1, policy: $2, authorizedRead: $3, beforeSideEffect: $4) }) {
+        self.validateRoute = validateRoute; self.readSession = readSession; self.executeAction = executeAction; self.readSnapshot = readSnapshot
+    }
+    func current()->ShortcutSession? { readSession() }
     func begin(
         goal:String,
         policy:ResourcePolicy,
@@ -257,12 +306,14 @@ extension AppProvider {
         resolvedPolicy=try resolvedPolicy.validated()
         let snapshot=DeviceSnapshot.read();if let reason=snapshot.stopReason(policy:resolvedPolicy,initialBattery:snapshot.battery){throw SandboxError.blocked(reason)}
         var session=ShortcutSession(id:UUID().uuidString,goal:goal,policy:resolvedPolicy,authorizationPolicy:savedPolicy,started:Date(),initialBattery:snapshot.battery,contract:contract,providerSelection:providerSelection,taskOrigin:origin,shortcutAdapterName:adapterName,routingEvidence:routingEvidence)
+        _ = try ProviderSharingConsent.require(route.provider)
         let firstPrompt=prompt(session)
         session.trace.append(try ProviderHandoffTrace.outbound(provider:route.provider,selection:providerSelection,origin:origin,adapterName:adapterName,actionIndex:session.step,prompt:firstPrompt))
         try continuationValidator.beforePersistence()
         try store.save(session,path:"state/shortcut-session.json")
+        try ProviderSharingConsent.bindSession(session)
         try continuationValidator.requireCurrent()
-        return firstPrompt
+        return try currentPrompt()
     }
     func appIntentOutput(payload:String,executionGeneration:ExecutionContinuationGate.Generation) throws -> String {
         let continuationValidator=ExecutionContinuationGate.shared.validator(for:executionGeneration)
@@ -274,7 +325,9 @@ extension AppProvider {
         }
         let output:AppIntentTaskOutput
         if session.phase == "awaiting_response" {
-            output = .providerHandoffPrompt(provider:provider,selection:session.providerSelection,adapterName:session.shortcutAdapterName,payload:payload)
+            let handoff = try checkedHandoff(session)
+            guard payload == handoff.payload else { throw SandboxError.blocked("PROVIDER_SHARING_OUTPUT_CHANGED") }
+            output = .providerHandoffPrompt(provider:handoff.provider,selection:handoff.selection,adapterName:handoff.adapterName,payload:handoff.payload)
         } else if let status=RunStatus(rawValue:session.phase) {
             output = .terminalProviderReceipt(provider:provider,selection:session.providerSelection,adapterName:session.shortcutAdapterName,phase:status,payload:payload)
         } else {
@@ -283,7 +336,24 @@ extension AppProvider {
         try continuationValidator.requireCurrent()
         return try output.json
     }
-    func prompt(_ session:ShortcutSession)->String {
+    func currentPrompt() throws -> String {
+        guard let session = current(), session.phase == "awaiting_response" else { throw SandboxError.blocked("NO_PENDING_PROVIDER_PROMPT") }
+        return try checkedHandoff(session).payload
+    }
+    private func checkedHandoff(_ session: ShortcutSession) throws -> CheckedProviderHandoff {
+        try SavedExecutionAuthorization.requireExact(session.authorizationPolicy)
+        try ProviderSharingConsent.requireSession(session)
+        try validateRoute(session)
+        guard let provider = AppProvider(rawValue: session.policy.provider) else { throw SandboxError.blocked("PROVIDER_SHARING_OUTPUT_CHANGED") }
+        return CheckedProviderHandoff(provider: provider, selection: session.providerSelection, adapterName: session.shortcutAdapterName, payload: prompt(session))
+    }
+    func currentRunURL() throws -> URL {
+        guard let session = current(), session.phase == "awaiting_response" else { throw SandboxError.blocked("NO_PENDING_PROVIDER_PROMPT") }
+        let handoff = try checkedHandoff(session)
+        guard let url = AdapterSettings.runURL(name: handoff.adapterName, input: handoff.payload) else { throw SandboxError.blocked("PROVIDER_SHARING_OUTPUT_CHANGED") }
+        return url
+    }
+    private func prompt(_ session:ShortcutSession)->String {
         let reserved=max(500,session.policy.contextChars-nativeOraclePolicy.count-180)
         let verification=session.contract.map{" Verification: "+$0.promptDescription} ?? " Verification contract: none; completion cannot be marked verified."
         let provider=AppProvider(rawValue:session.policy.provider) ?? .local
@@ -298,21 +368,24 @@ extension AppProvider {
         guard !applying,!AgentRunner.shared.running else {throw SandboxError.blocked("Another action is active.")}
         applying=true;defer{applying=false}
         guard var session=current(),session.phase=="awaiting_response" else {throw SandboxError.blocked("No resumable app response is pending. Inspect the checkpoint if interrupted.")}
+        var protectedPrevious = session
         guard !session.requiresLegacyRestart else {throw SandboxError.blocked("LEGACY_SHORTCUT_SESSION_RESTART_REQUIRED: Stop this handoff, then begin a new task so the current adapter, authorization, and qualification evidence are bound before execution.")}
         guard !session.shortcutAdapterName.isEmpty else {throw SandboxError.blocked("SHORTCUT_ADAPTER_METADATA_MISSING_RESTART_TASK")}
         guard let saved=UserDefaults.standard.data(forKey:"policy"),let current=try? JSONDecoder().decode(ResourcePolicy.self,from:saved) else {return try await finish(&session,status:.blocked,summary:"Authorization is missing. Save it again before starting a new task.",continuationValidator:continuationValidator)}
         if !session.authorizationMatches(current) {return try await finish(&session,status:.blocked,summary:"Authorization changed. Begin a new task with the saved policy.",continuationValidator:continuationValidator)}
         do {
-            try ProviderRuntimeCapabilities.validateActiveExternalRoute(session)
+            try ProviderSharingConsent.requireSession(session)
+            try validateRoute(session)
         } catch {
             try continuationValidator.requireCurrent()
+            try ProviderSharingConsent.requireSession(session)
             return try await finish(&session,status:.blocked,summary:"Provider qualification or route evidence changed. Review the device checks and begin a new task.",continuationValidator:continuationValidator)
         }
-        if let reason=DeviceSnapshot.read().stopReason(policy:session.policy,initialBattery:session.initialBattery){return try await finish(&session,status:.blocked,summary:reason,continuationValidator:continuationValidator)}
+        if let reason=readSnapshot().stopReason(policy:session.policy,initialBattery:session.initialBattery){return try await finish(&session,status:.blocked,summary:reason,continuationValidator:continuationValidator)}
         guard session.step<session.policy.maxSteps else {return try await finish(&session,status:.blocked,summary:"Step budget exhausted.",continuationValidator:continuationValidator)}
         guard let actionIndex=try session.beginDistinctResponse(response) else{
             try continuationValidator.requireCurrent()
-            return prompt(session)
+            return try currentPrompt()
         }
         guard let provider=AppProvider(rawValue:session.policy.provider) else {return try await finish(&session,status:.blocked,summary:"The saved provider route is invalid.",continuationValidator:continuationValidator)}
         session.trace.append(try ProviderHandoffTrace.inbound(provider:provider,selection:session.providerSelection,origin:session.taskOrigin,adapterName:session.shortcutAdapterName,actionIndex:actionIndex,response:response))
@@ -327,39 +400,47 @@ extension AppProvider {
                 session.phase="applying"
                 try continuationValidator.beforePersistence()
                 try store.save(session,path:"state/shortcut-session.json")
+                try ProviderSharingConsent.bindSession(session, previous: protectedPrevious)
+                protectedPrevious = session
+                let admittedSession = session
                 let result=try await continuationValidator.validatedAwait {
-                    try await Dispatcher.shared.execute(
+                    try await self.executeAction(
                         call,
-                        callID:"\(session.id)-app-\(actionIndex)",
-                        policy:session.policy,
-                        authorizedRead:session.lastReadEvidence,
-                        beforeSideEffect:{
+                        "\(session.id)-app-\(actionIndex)",
+                        session.policy,
+                        session.lastReadEvidence,
+                        {
                             try continuationValidator.beforeDispatcherSideEffect()
                             try SavedExecutionAuthorization.requireExact(session.authorizationPolicy)
-                            try ProviderRuntimeCapabilities.validateActiveExternalRoute(session)
+                            try ProviderSharingConsent.requireSession(admittedSession)
+                            try self.validateRoute(admittedSession)
                         }
                     )
                 }
                 try continuationValidator.requireCurrent()
+                try ProviderSharingConsent.requireSession(admittedSession)
                 let promptBudget=latestPromptBudget(limit:max(500,session.policy.contextChars-nativeOraclePolicy.count-180))
                 session.latest=result.promptJSON(maxCharacters:promptBudget);session.latestResult=result;session.lastReadEvidence=call.tool == .read && result.isCompleteInPrompt(maxCharacters:promptBudget) ? result.evidence:nil;session.trace.append(.receiptSuccess(result))
                 session.recordSuccessfulResponse()
             }
         } catch {
             try continuationValidator.requireCurrent()
+            try ProviderSharingConsent.requireSession(protectedPrevious)
             let privateMessage=error.localizedDescription
             let providerSafeCode=ReceiptPrivacy.errorCode(privateMessage)
             session.recordFailedResponse(providerSafeCode)
             if privateMessage.contains("UNCERTAIN") || session.failures>=session.policy.maxFailures || session.repeated>=2 {return try await finish(&session,status:.blocked,summary:providerSafeCode,continuationValidator:continuationValidator)}
         }
+        try ProviderSharingConsent.requireSession(protectedPrevious)
         session.phase="awaiting_response"
         if session.step>=session.policy.maxSteps{return try await finish(&session,status:.blocked,summary:"Step budget exhausted. Review the recorded results.",continuationValidator:continuationValidator)}
         let nextPrompt=prompt(session)
         session.trace.append(try ProviderHandoffTrace.outbound(provider:provider,selection:session.providerSelection,origin:session.taskOrigin,adapterName:session.shortcutAdapterName,actionIndex:session.step,prompt:nextPrompt))
         try continuationValidator.beforePersistence()
         try store.save(session,path:"state/shortcut-session.json")
+        try ProviderSharingConsent.bindSession(session, previous: protectedPrevious)
         try continuationValidator.requireCurrent()
-        return nextPrompt
+        return try currentPrompt()
     }
     func stop(
         executionGeneration providedExecutionGeneration:ExecutionContinuationGate.Generation? = nil

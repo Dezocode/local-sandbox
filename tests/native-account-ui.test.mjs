@@ -337,7 +337,7 @@ test('queued UI actions capture one lock generation before spawning work and for
   const stopEntry = sourceSlice(
     oracleView,
     'Button("Stop handoff"',
-    'if !prompt.isEmpty',
+    'if ShortcutCoordinator.shared.current()?.phase',
     'Shortcut stop UI entry',
   );
   assert.equal((stopEntry.match(/ExecutionContinuationGate\.shared\.capture\(\)/g) ?? []).length, 1);
@@ -1071,7 +1071,8 @@ test('provider qualification is measured, device-local, tamper-evident, and dete
   assert.doesNotMatch(app, /I received the test response/);
   assert.match(app, /response is validated in memory and is not saved/);
   assert.match(app, /resolvedRoute:route/);
-  assert.match(app, /session\.shortcutAdapterName/);
+  assert.match(app, /ShortcutCoordinator\.shared\.currentRunURL\(\)/);
+  assert.match(bridge, /AdapterSettings\.runURL\(name: handoff\.adapterName, input: handoff\.payload\)/);
   assert.match(app, /inboxCard\("Working",count:workingCount/);
   assert.match(app, /\["awaiting_response","applying"\]\.contains\(session\.phase\)/);
   assert.match(bridge, /return \.providerResponsePending/);
@@ -1083,7 +1084,7 @@ test('provider qualification is measured, device-local, tamper-evident, and dete
   assert.match(models, /enum SavedExecutionAuthorization[\s\S]*SAVE_AUTHORIZATION_BEFORE_RUNNING/);
   assert.doesNotMatch(app, /restored\.validated\(\);UserDefaults\.standard\.set\(try JSONEncoder\(\)\.encode\(policy\),forKey:"policy"\)/);
   assert.match(workspacePreparation, /Workspace policy is configuration only\./);
-  assert.match(app, /Resource, clipboard, and cloud-consent changes take effect only after Save authorization on this iPhone\./);
+  assert.match(app, /Resource, clipboard, and cloud authorization changes take effect only after Save authorization on this iPhone\. Each external provider also requires separate sharing permission after its disclosure is reviewed\./);
   assert.match(bridge, /let providerSafeCode=ReceiptPrivacy\.errorCode\(privateMessage\)[\s\S]*session\.recordFailedResponse\(providerSafeCode\)/);
   assert.match(bridge, /LEGACY_SHORTCUT_SESSION_RESTART_REQUIRED[\s\S]*legacyTraceOnly:true[\s\S]*state\/shortcut-session\.json/);
   assert.match(app, /Provider selection and Apply Oracle recommendation change only the saved provider/);
@@ -1148,7 +1149,7 @@ test('provider qualification is measured, device-local, tamper-evident, and dete
   assert.match(runtime, /try beforeSideEffect\(\)[\s\S]*switch try executor\.prepare/);
   assert.match(runtime, /try beforeSideEffect\(\)[\s\S]*try executor\.complete\(prepared, result: result\)/);
   assert.match(bridge, /SavedExecutionAuthorization\.requireExact\(savedPolicy\)/);
-  assert.match(bridge, /beforeSideEffect:\{[\s\S]*continuationValidator\.beforeDispatcherSideEffect\(\)[\s\S]*SavedExecutionAuthorization\.requireExact\(session\.authorizationPolicy\)[\s\S]*validateActiveExternalRoute\(session\)/);
+  assert.match(bridge, /self\.executeAction\([\s\S]*continuationValidator\.beforeDispatcherSideEffect\(\)[\s\S]*SavedExecutionAuthorization\.requireExact\(session\.authorizationPolicy\)[\s\S]*ProviderSharingConsent\.requireSession\(admittedSession\)[\s\S]*self\.validateRoute\(admittedSession\)/);
   const shortcutBegin=bridge.slice(bridge.indexOf('func begin('),bridge.indexOf('func appIntentOutput'));
   assert.match(shortcutBegin,/executionGeneration providedExecutionGeneration:ExecutionContinuationGate\.Generation\? = nil/);
   assert.match(shortcutBegin,/providedExecutionGeneration \?\? ExecutionContinuationGate\.shared\.capture\(\)/);
@@ -1160,7 +1161,8 @@ test('provider qualification is measured, device-local, tamper-evident, and dete
   assert.match(shortcutAccept,/executionGeneration providedExecutionGeneration:ExecutionContinuationGate\.Generation\? = nil/);
   assert.equal((shortcutAccept.match(/ExecutionContinuationGate\.shared\.capture\(\)/g)??[]).length,1,'Shortcut accept must capture exactly one lock generation');
   assert.ok(shortcutAccept.indexOf('continuationValidator.requireCurrent()')<shortcutAccept.indexOf('AgentAction.requireBoundedResponse'),'Shortcut accept must validate its lock generation before processing a response');
-  assert.match(shortcutAccept,/validatedAwait \{[\s\S]*Dispatcher\.shared\.execute/);
+  assert.match(shortcutAccept,/validatedAwait \{[\s\S]*self\.executeAction/);
+  assert.match(bridge,/executeAction: @escaping ExecuteAction = \{ try await Dispatcher\.shared\.execute\(\$0, callID: \$1, policy: \$2, authorizedRead: \$3, beforeSideEffect: \$4\)/);
   const shortcutCatch=shortcutAccept.slice(shortcutAccept.lastIndexOf('} catch {'));
   assert.ok(shortcutCatch.indexOf('continuationValidator.requireCurrent()')<shortcutCatch.indexOf('ReceiptPrivacy.errorCode'),'lock retirement must escape before provider-failure accounting');
   const shortcutStop=bridge.slice(bridge.indexOf('func stop('),bridge.indexOf('private func finish',bridge.indexOf('func stop(')));

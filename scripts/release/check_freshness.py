@@ -25,8 +25,15 @@ from release_common import read_external_regular
 
 
 ROOT = Path(__file__).resolve().parents[2]
-EXPECTED_GUIDE_PAGES = 27
+EXPECTED_GUIDE_PAGES = 28
 REQUIRED_GUIDE_TEXT = [
+    "Native provider sharing",
+    "Review or withdraw provider sharing",
+    "Allow these handoffs on this iPhone",
+    "Cloud providers also require saved cloud authorization",
+    "Changed configuration or renewed permission requires a fresh task or provider check",
+    "Allow this export and choose recipient or Cancel",
+    "This one-time export does not grant persistent provider permission",
     "authenticate with ChatGPT or configured app-level Apple sign-in",
     "portable native crypto, account and sync, autosave, and recursive-filesystem contracts",
     "Those checks do not build the full Xcode app, run a simulator, sign the app, or install it on an iPhone",

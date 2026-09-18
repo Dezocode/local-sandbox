@@ -43,6 +43,11 @@ def generate(output: Path, *, root: Path = ROOT) -> None:
     )
 
 
+class PdfReaderPage:
+    def __init__(self, page):
+        self.pages = [page]
+
+
 class ReleaseFreshnessTests(unittest.TestCase):
     def test_guide_bytes_do_not_depend_on_checkout_path(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -80,6 +85,12 @@ class ReleaseFreshnessTests(unittest.TestCase):
             self.assertIn("Read -> patch -> reread -> verified receipt", text)
             self.assertNotIn("\u2192", text)
             self.assertNotIn("Local Sandbox ■ Plan One Step", text)
+            pages = [normalized_pdf_text(PdfReaderPage(page)) for page in PdfReader(first).pages]
+            sharing_index = next(i for i, value in enumerate(pages) if value.startswith("Native provider sharing"))
+            self.assertTrue(pages[sharing_index - 1].startswith("Native setup / Xcode"))
+            self.assertTrue(pages[sharing_index + 1].startswith("Resource policy / exact meaning"))
+            for label in ["Save configuration", "What is sent", "Allow these handoffs on this iPhone", "Withdraw sharing permission", "Review and share current prompt", "Allow this export and choose recipient or Cancel"]:
+                self.assertIn(label, pages[sharing_index])
 
     def test_guide_validation_rejects_corruption_and_stale_claims(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

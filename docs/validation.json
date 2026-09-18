@@ -2,49 +2,49 @@
   "recordType": "local-sandbox-release-validation",
   "schemaVersion": 1,
   "version": "0.3.0",
-  "generatedAt": "2026-09-18T00:07:12.419Z",
-  "candidateDigest": "87c790485a60c4d845729feb8ecfdeef8ee663bd46c0884f8a0c067a008a65d9",
+  "generatedAt": "2026-09-18T00:39:37.573Z",
+  "candidateDigest": "e3edacea3b9457ecb8e14dbf68dffaa998c748f320d7c59579d61aa8393ecfd3",
   "automatedVerification": {
     "status": "passed",
     "checks": [
       {
         "label": "Release version ownership",
-        "durationMs": 93,
+        "durationMs": 36,
         "status": "passed"
       },
       {
         "label": "Release Python dependencies",
-        "durationMs": 318,
+        "durationMs": 99,
         "status": "passed"
       },
       {
         "label": "Generated Xcode metadata",
-        "durationMs": 159,
+        "durationMs": 62,
         "status": "passed"
       },
       {
         "label": "Release packager safety",
-        "durationMs": 2146,
+        "durationMs": 1102,
         "status": "passed"
       },
       {
         "label": "GitHub release preflight contracts",
-        "durationMs": 48941,
+        "durationMs": 42823,
         "status": "passed"
       },
       {
         "label": "Deterministic setup guide contracts",
-        "durationMs": 5457,
+        "durationMs": 5301,
         "status": "passed"
       },
       {
         "label": "Committed release artifact freshness",
-        "durationMs": 2271,
+        "durationMs": 2178,
         "status": "passed"
       },
       {
         "label": "Release qualification tracker",
-        "durationMs": 1490,
+        "durationMs": 1497,
         "status": "passed",
         "tracker": {
           "evidenceSha256": "1ef2d7ee4e1927e99374e067f8fbeb67a296aa5146be13ef635d6b7bddf81f03",
@@ -57,137 +57,137 @@
       },
       {
         "label": "Lint",
-        "durationMs": 9338,
+        "durationMs": 9118,
         "status": "passed"
       },
       {
         "label": "TypeScript",
-        "durationMs": 2352,
+        "durationMs": 2243,
         "status": "passed"
       },
       {
         "label": "Node contracts",
-        "durationMs": 28571,
+        "durationMs": 28123,
         "status": "passed"
       },
       {
         "label": "D1 storage contracts",
-        "durationMs": 49,
+        "durationMs": 38,
         "status": "passed"
       },
       {
         "label": "Git worktree contracts",
-        "durationMs": 317,
+        "durationMs": 307,
         "status": "passed"
       },
       {
         "label": "Swift parser",
-        "durationMs": 326,
+        "durationMs": 85,
         "status": "passed"
       },
       {
         "label": "Native core compile",
-        "durationMs": 3685,
+        "durationMs": 3873,
         "status": "passed"
       },
       {
         "label": "Native core contracts",
-        "durationMs": 800,
+        "durationMs": 719,
         "status": "passed"
       },
       {
         "label": "Native execution core compile",
-        "durationMs": 3311,
+        "durationMs": 2927,
         "status": "passed"
       },
       {
         "label": "Native execution core contracts",
-        "durationMs": 191,
+        "durationMs": 237,
         "status": "passed"
       },
       {
         "label": "Provider qualification strict typecheck",
-        "durationMs": 1413,
+        "durationMs": 1645,
         "status": "passed"
       },
       {
         "label": "Provider qualification contracts compile",
-        "durationMs": 3554,
+        "durationMs": 4075,
         "status": "passed"
       },
       {
         "label": "Provider qualification contracts",
-        "durationMs": 230,
+        "durationMs": 252,
         "status": "passed"
       },
       {
         "label": "Shortcut package core compile",
-        "durationMs": 732,
+        "durationMs": 695,
         "status": "passed"
       },
       {
         "label": "Shortcut package core contracts",
-        "durationMs": 186,
+        "durationMs": 213,
         "status": "passed"
       },
       {
         "label": "Workspace crypto compile",
-        "durationMs": 2616,
+        "durationMs": 2533,
         "status": "passed"
       },
       {
         "label": "Workspace crypto interoperability",
-        "durationMs": 1428,
+        "durationMs": 1406,
         "status": "passed"
       },
       {
         "label": "Native account and sync compile",
-        "durationMs": 8708,
+        "durationMs": 8733,
         "status": "passed"
       },
       {
         "label": "Native account and sync contracts",
-        "durationMs": 1251,
+        "durationMs": 1263,
         "status": "passed"
       },
       {
         "label": "Native autosave compile",
-        "durationMs": 2471,
+        "durationMs": 2487,
         "status": "passed"
       },
       {
         "label": "Native autosave contracts",
-        "durationMs": 203,
+        "durationMs": 232,
         "status": "passed"
       },
       {
         "label": "Recursive sandbox compile",
-        "durationMs": 2115,
+        "durationMs": 2146,
         "status": "passed"
       },
       {
         "label": "Recursive sandbox contracts",
-        "durationMs": 189,
+        "durationMs": 241,
         "status": "passed"
       },
       {
         "label": "Workspace preparation compile",
-        "durationMs": 2266,
+        "durationMs": 2252,
         "status": "passed"
       },
       {
         "label": "Workspace preparation contracts",
-        "durationMs": 181,
+        "durationMs": 224,
         "status": "passed"
       },
       {
         "label": "GitHub transport compile",
-        "durationMs": 2273,
+        "durationMs": 2217,
         "status": "passed"
       },
       {
         "label": "GitHub transport contracts",
-        "durationMs": 188,
+        "durationMs": 226,
         "status": "passed"
       },
       {
@@ -197,17 +197,17 @@
       },
       {
         "label": "Production web build",
-        "durationMs": 5435,
+        "durationMs": 4798,
         "status": "passed"
       },
       {
         "label": "Built worker integration",
-        "durationMs": 12218,
+        "durationMs": 12102,
         "status": "passed"
       },
       {
         "label": "Static self-host reproducibility",
-        "durationMs": 429,
+        "durationMs": 422,
         "status": "passed"
       },
       {
@@ -217,7 +217,7 @@
       },
       {
         "label": "Release artifact audit",
-        "durationMs": 687,
+        "durationMs": 688,
         "status": "passed"
       }
     ]

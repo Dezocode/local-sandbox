@@ -16,7 +16,8 @@ enum NativeCoreContracts {
         }
     }
 
-    static func main() throws {
+    @MainActor static func main() throws {
+        try ProviderSharingConsentContracts.run()
         let decoder = JSONDecoder()
         let encoder = JSONEncoder()
 

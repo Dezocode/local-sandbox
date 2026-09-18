@@ -552,6 +552,7 @@ enum ProviderQualificationStore {
         guard !provider.usesCloud || policy.cloudAllowed else {
             throw SandboxError.blocked("Authorize cloud app handoffs in Settings first.")
         }
+        if provider != .apple { _ = try ProviderSharingConsent.require(provider) }
         return policy
     }
 
@@ -584,6 +585,7 @@ enum ProviderQualificationStore {
             guard challenge.prompt.count <= contextCharacters else {
                 throw SandboxError.blocked("PROVIDER_CHECK_EXCEEDS_SAVED_CONTEXT: Restore the saved prompt cap or wait for this check to expire before starting another.")
             }
+            try ProviderSharingConsent.requireQualification(challenge)
             return challenge
         }
         return try createChallenge(provider, contextCharacters, appIntentTransportObserved)
@@ -669,7 +671,9 @@ enum ProviderQualificationStore {
         ).validated())
         trim(&ledger)
         try save(ledger)
-        return ProviderQualificationChallenge(attemptID: attemptID, provider: provider, probe: probe, adapterName: adapter?.name, prompt: prompt)
+        let challenge = ProviderQualificationChallenge(attemptID: attemptID, provider: provider, probe: probe, adapterName: adapter?.name, prompt: prompt)
+        if provider != .apple { try ProviderSharingConsent.bindQualification(challenge) }
+        return challenge
     }
 
     @discardableResult
@@ -684,11 +688,22 @@ enum ProviderQualificationStore {
         guard Keychain.get("appleUser") != nil, SandboxStore.shared.connected else {
             throw SandboxError.blocked("SIGN_IN_AND_PREPARE_PROTECTED_WORKSPACE_FIRST")
         }
+        if provider != .apple { _ = try requireSavedAuthorization(for: provider) }
         guard response.utf8.count <= 16_000 else { throw SandboxError.invalid("QUALIFICATION_RESPONSE_TOO_LARGE") }
         var ledger = try load(now: now)
         guard let index = ledger.attempts.firstIndex(where: { $0.attemptID == attemptID }),
               ledger.attempts[index].provider == provider else {
             throw SandboxError.blocked("PROVIDER_CHECK_NOT_FOUND")
+        }
+        if provider != .apple {
+            // Reconstruct the exact retained attempt, including terminal retries whose
+            // measured-adapter reconciliation failed. A started-only lookup loses them.
+            let retained = ledger.attempts[index]
+            let token = try challengeToken(epoch: retained.epochSHA256, provider: provider, probe: retained.probe, attemptID: retained.attemptID)
+            let challenge = ProviderQualificationChallenge(attemptID: retained.attemptID, provider: provider, probe: retained.probe,
+                adapterName: AdapterSettings.get(provider).name,
+                prompt: ProviderQualificationVerifier.prompt(probe: retained.probe, token: token, contextCharacters: retained.promptCharacterCount))
+            try ProviderSharingConsent.requireQualification(challenge)
         }
         guard !appleSuiteRunning || (withinAppleSuite && provider == .apple) else {
             throw SandboxError.blocked("APPLE_PROVIDER_QUALIFICATION_IS_ACTIVE")
@@ -1092,6 +1107,10 @@ enum ProviderQualificationStore {
         let signed = SignedProviderQualificationLedger(payload: valid, hmacSHA256: hmac(canonical, key: try signingKey()))
         let bytes = try JSONEncoder.sorted.encode(signed)
         let url = try ledgerURL()
+        try writeLedgerBytes(bytes, url)
+    }
+
+    static var writeLedgerBytes: @MainActor (Data, URL) throws -> Void = { bytes, url in
         try bytes.write(to: url, options: .atomic)
         try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: url.path)
         guard try Data(contentsOf: url) == bytes else { throw SandboxError.conflict("PROVIDER_QUALIFICATION_LEDGER_READBACK_FAILED") }
@@ -1113,9 +1132,13 @@ enum ProviderQualificationStore {
         }
     }
 
+    static var ledgerDirectory: @MainActor () throws -> URL = {
+        try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            .appendingPathComponent("LocalSandboxPrivateRouting", isDirectory: true)
+    }
+
     private static func ledgerURL() throws -> URL {
-        let base = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-        let directory = base.appendingPathComponent("LocalSandboxPrivateRouting", isDirectory: true)
+        let directory = try ledgerDirectory()
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.protectionKey: FileProtectionType.complete])
         return directory.appendingPathComponent("provider-qualification-ledger.json")
     }

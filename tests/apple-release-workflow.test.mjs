@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -1253,9 +1253,67 @@ test('Continuous verification separates portable Ubuntu evidence from canonical 
   assert.match(webJob, /runs-on: ubuntu-latest/);
   assert.match(webJob, /verify-release\.mjs --portable-web-only/);
   assert.doesNotMatch(webJob, /pnpm run verify/);
-  assert.match(nativeJob, /runs-on: macos-latest/);
+  assert.match(nativeJob, /runs-on: xcode-27/);
+  assert.doesNotMatch(nativeJob, /runs-on: macos-latest/);
   assert.match(nativeJob, /Run canonical full verification[\s\S]*run: pnpm run verify/);
   assert.match(nativeJob, /LOCAL_SANDBOX_RELEASE_PYTHON: python3/);
+});
+
+test('Native CI executes a fail-closed toolchain guard before installing dependencies', async (t) => {
+  const nativeJob = verificationWorkflow.slice(verificationWorkflow.indexOf('  native:'));
+  const guardStep = nativeJob.match(/      - name: Verify native CI toolchain\n        shell: bash\n        run: \|\n([\s\S]*?)(?=      - )/);
+  assert.ok(guardStep, 'native toolchain guard is missing');
+  assert.ok(nativeJob.indexOf('Verify native CI toolchain') < nativeJob.indexOf('Install deterministic dependencies'));
+  assert.doesNotMatch(nativeJob, /continue-on-error|if:\s*always\(\)|#if compiler/);
+  const guard = guardStep[1].split('\n').map((line) => line.startsWith('          ') ? line.slice(10) : line).join('\n');
+  const fixture = await mkdtemp(path.join(os.tmpdir(), 'local-sandbox-ci-toolchain-'));
+  t.after(() => rm(fixture, { recursive: true, force: true }));
+  const tool = `#!${process.execPath}\nconst fs=require('node:fs');\nconst path=require('node:path');\nconst key=path.basename(process.argv[1])+':'+process.argv.slice(2).join(' ');\nconst response=JSON.parse(process.env.LS_CI_TOOL_RESPONSES)[key];\nfs.appendFileSync(process.env.LS_CI_TOOL_TRACE,key+'\\n');\nif(!response){process.stderr.write('Unexpected tool call '+key);process.exit(98);}\nprocess.stdout.write(response.stdout ?? '');\nprocess.stderr.write(response.stderr ?? '');\nprocess.exit(response.status ?? 0);\n`;
+  for (const executable of ['xcodebuild', 'xcrun']) {
+    await writeFile(path.join(fixture, executable), tool, { mode: 0o755 });
+  }
+  const supported = {
+    'xcodebuild:-version': { stdout: 'Xcode 27.0\nBuild version 27A5252f\n' },
+    'xcodebuild:-showsdks': { stdout: 'iOS SDKs:\n iOS 27.0 -sdk iphoneos27.0\nSimulator - iOS 27.0 -sdk iphonesimulator27.0\n' },
+    'xcrun:swiftc --version': { stdout: 'Apple Swift version 6.3 (swiftlang-test)\nTarget: arm64-apple-macosx27.0\n' },
+    'xcrun:--sdk iphoneos --show-sdk-version': { stdout: '27.0\n' },
+    'xcrun:--sdk iphonesimulator --show-sdk-version': { stdout: '27.0\n' },
+  };
+  const cases = [
+    ['supported beta', {}, true],
+    ['supported RC', { 'xcodebuild:-version': { stdout: 'Xcode 27.0\nBuild version 27A266a\n' } }, true],
+    ['old Xcode', { 'xcodebuild:-version': { stdout: 'Xcode 26.6\nBuild version 17F113\n' } }, false],
+    ['old device SDK', { 'xcrun:--sdk iphoneos --show-sdk-version': { stdout: '26.5\n' } }, false],
+    ['old Simulator SDK', { 'xcrun:--sdk iphonesimulator --show-sdk-version': { stdout: '26.5\n' } }, false],
+    ['missing Simulator SDK', { 'xcrun:--sdk iphonesimulator --show-sdk-version': { stdout: '' } }, false],
+    ['malformed SDK', { 'xcrun:--sdk iphoneos --show-sdk-version': { stdout: '27.x\n' } }, false],
+    ['old Swift', { 'xcrun:swiftc --version': { stdout: 'Apple Swift version 5.10\n' } }, false],
+    ['malformed Xcode', { 'xcodebuild:-version': { stdout: 'Xcode unknown\n' } }, false],
+    ['failed version command', { 'xcodebuild:-version': { stdout: 'Xcode 27.0\nBuild version 27A5252f\n', status: 7 } }, false],
+    ['failed SDK inventory', { 'xcodebuild:-showsdks': { status: 7 } }, false],
+    ['failed compiler command', { 'xcrun:swiftc --version': { status: 7 } }, false],
+    ['failed device SDK lookup', { 'xcrun:--sdk iphoneos --show-sdk-version': { status: 7 } }, false],
+    ['failed Simulator SDK lookup', { 'xcrun:--sdk iphonesimulator --show-sdk-version': { status: 7 } }, false],
+  ];
+  for (const [name, overrides, accepted] of cases) {
+    const trace = path.join(fixture, 'trace.txt');
+    await writeFile(trace, '');
+    const result = spawnSync('bash', ['-c', guard], {
+      encoding: 'utf8', timeout: 15_000,
+      env: { ...process.env, PATH: `${fixture}${path.delimiter}${process.env.PATH}`, LS_CI_TOOL_RESPONSES: JSON.stringify({ ...supported, ...overrides }), LS_CI_TOOL_TRACE: trace },
+    });
+    assert.ifError(result.error);
+    assert.equal(result.status === 0, accepted, `${name}: ${result.stdout}\n${result.stderr}`);
+    assert.equal(result.stdout.includes('Supplemental native CI toolchain accepted'), accepted, name);
+    const calls = (await readFile(trace, 'utf8')).trim().split('\n');
+    assert.deepEqual(calls, Object.keys(supported).slice(0, calls.length), name);
+    const failingCommand = Object.entries(overrides).find(([, response]) => response.status)?.[0];
+    if (failingCommand) assert.equal(calls.at(-1), failingCommand, name);
+    if (accepted) assert.equal(calls.length, Object.keys(supported).length);
+  }
+  const simulatorStep = nativeJob.slice(nativeJob.indexOf('      - name: Run contract tests on an available iPhone simulator'));
+  assert.match(simulatorStep, /python3 scripts\/release\/apple\.py test --simulator "\$LOCAL_SANDBOX_SIMULATOR"/);
+  assert.doesNotMatch(simulatorStep, /CODE_SIGNING_ALLOWED=NO/);
 });
 
 test('Release documentation states the build-number limits and hosted-runner limit', () => {
@@ -1264,6 +1322,8 @@ test('Release documentation states the build-number limits and hosted-runner lim
   assert.match(releaseGuide, /1 through 99/);
   assert.match(releaseGuide, /underlying hosted image revision can change/);
   assert.match(releaseGuide, /Xcode 27\.0 build `27A266a`/);
+  assert.match(releaseGuide, /Supplemental native CI/);
+  assert.match(releaseGuide, /does not satisfy the exact-RC archive\/upload requirement/);
 });
 
 test('Release documentation separates repository bootstrap and protected causal readiness', () => {

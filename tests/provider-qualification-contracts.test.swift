@@ -451,6 +451,17 @@ enum ProviderQualificationLedgerContracts {
 
     @MainActor
     static func testExternalQualificationAuthorization() throws {
+        let previousConsentVault = ProviderSharingConsent.vault
+        var consentBytes: [AppProvider: String] = [:]
+        var deniedProviders = Set<AppProvider>()
+        ProviderSharingConsent.vault = ProviderSharingConsentVault(operations: .init(
+            read: { consentBytes[$0] }, write: { consentBytes[$0] = $1 }, delete: { consentBytes[$0] = nil },
+            isDenied: { deniedProviders.contains($0) }, deny: { deniedProviders.insert($0) }, clearDenial: { deniedProviders.remove($0) }
+        ))
+        defer { ProviderSharingConsent.vault = previousConsentVault }
+        for provider in AppProvider.allCases where provider != .apple {
+            try ProviderSharingConsent.vault.approve(ProviderSharingConsent.configuration(provider), owner: ProviderSharingConsent.owner())
+        }
         let defaults = UserDefaults.standard
         let previousPolicy = defaults.object(forKey: "policy")
         defer {
@@ -489,20 +500,22 @@ enum ProviderQualificationLedgerContracts {
                         provider: requested,
                         probe: .strictJSON,
                         adapterName: requested.shortcut,
-                        prompt: "current protected-store challenge"
+                        prompt: "new authorized challenge"
                     )
                 },
                 createChallenge: { requested, context, observed in
                     creations += 1
                     try check(context == saved.contextChars, "qualification used the unsaved draft context cap")
                     try check(observed, "App Intent transport marker was lost")
-                    return ProviderQualificationChallenge(
+                    let challenge = ProviderQualificationChallenge(
                         attemptID: pendingID,
                         provider: requested,
                         probe: .strictJSON,
                         adapterName: requested.shortcut,
                         prompt: "new authorized challenge"
                     )
+                    try ProviderSharingConsent.bindQualification(challenge)
+                    return challenge
                 }
             )
             handedOff += 1
@@ -546,7 +559,7 @@ enum ProviderQualificationLedgerContracts {
             try check(cloud.provider == provider, "allowed cloud provider was changed")
         }
         let pending = try authorize(.chatgpt, pending: pendingID)
-        try check(pending.prompt == "current protected-store challenge" && pendingReads == 1,
+        try check(pending.prompt == "new authorized challenge" && pendingReads == 1,
                   "pending handoff did not reread its protected-store challenge")
 
         let readsBeforeRevocation = pendingReads
@@ -584,6 +597,59 @@ enum ProviderQualificationLedgerContracts {
         }
         try check(creations == creationsBeforeRevocation,
                   "stale, mismatched, or oversized pending challenge created a replacement")
+    }
+
+    @MainActor
+    static func testActualCompleteRetryAfterMeasuredAdapterFailure() throws {
+        let defaults = UserDefaults.standard
+        let oldPolicy = defaults.object(forKey: "policy")
+        let oldKey = try Keychain.getChecked("providerQualificationLedgerHMAC")
+        let oldAdapter = AdapterSettings.get(.local)
+        let oldVault = ProviderSharingConsent.vault
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("provider-sharing-contract-" + UUID().uuidString)
+        let oldDirectory = ProviderQualificationStore.ledgerDirectory
+        let oldWriter = ProviderQualificationStore.writeLedgerBytes
+        // macOS cannot implement iOS complete file protection; the app-hosted test
+        // executes the real protected writer. This fixture retains atomic readback.
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        ProviderQualificationStore.ledgerDirectory = { directory }
+        ProviderQualificationStore.writeLedgerBytes = { bytes, url in
+            try bytes.write(to: url, options: .atomic)
+            guard try Data(contentsOf: url) == bytes else { throw InjectedFailure.write }
+        }
+        defer {
+            ProviderSharingConsent.vault = oldVault; AdapterSettings.failMeasuredRoundTrip = false
+            AdapterSettings.set(oldAdapter, for: .local)
+            if let oldPolicy { defaults.set(oldPolicy, forKey: "policy") } else { defaults.removeObject(forKey: "policy") }
+            if let oldKey { try? Keychain.set(oldKey, for: "providerQualificationLedgerHMAC") } else { Keychain.delete("providerQualificationLedgerHMAC") }
+            ProviderQualificationStore.ledgerDirectory = oldDirectory
+            ProviderQualificationStore.writeLedgerBytes = oldWriter
+            try? FileManager.default.removeItem(at: directory)
+        }
+        var records: [AppProvider: String] = [:]; var denied = Set<AppProvider>()
+        ProviderSharingConsent.vault = ProviderSharingConsentVault(operations: .init(read: { records[$0] }, write: { records[$0] = $1 }, delete: { records[$0] = nil }, isDenied: { denied.contains($0) }, deny: { denied.insert($0) }, clearDenial: { denied.remove($0) }))
+        defaults.set(try JSONEncoder().encode(ResourcePolicy()), forKey: "policy")
+        AdapterSettings.set(ShortcutAdapter(name: "Retry provider"), for: .local)
+        try ProviderSharingConsent.vault.approve(ProviderSharingConsent.configuration(.local), owner: ProviderSharingConsent.owner())
+        try ProviderQualificationStore.prepare()
+        let challenge = try ProviderQualificationStore.begin(provider: .local, contextCharacters: 6000, appIntentTransportObserved: true)
+        try check(challenge.probe == .strictJSON, "fresh complete fixture did not start strict JSON")
+        guard let beginning = challenge.prompt.firstIndex(of: "{") else { throw InjectedFailure.write }
+        let response = String(challenge.prompt[beginning...])
+        AdapterSettings.failMeasuredRoundTrip = true
+        do { _ = try ProviderQualificationStore.complete(attemptID: challenge.attemptID, provider: .local, response: response, appIntentTransportObserved: true); throw InjectedFailure.write } catch is SandboxError {}
+        let noPending = try ProviderQualificationStore.pending(provider: .local)
+        try check(noPending == nil, "fixture did not persist terminal attempt before adapter failure")
+        AdapterSettings.failMeasuredRoundTrip = false
+        let result = try ProviderQualificationStore.complete(attemptID: challenge.attemptID, provider: .local, response: response, appIntentTransportObserved: true)
+        try check(result.outcome == .verified && result.adapterStateReconciled == true, "actual complete retry lost terminal reconciliation")
+        let repeated = try ProviderQualificationStore.complete(attemptID: challenge.attemptID, provider: .local, response: response, appIntentTransportObserved: true)
+        try check(repeated == result, "actual complete retry was not idempotent")
+        let snapshot = try ProviderQualificationStore.snapshots()[.local]
+        try check(snapshot?.sampleCount == 1 && snapshot?.verifiedCount == 1, "retry changed probe counters")
+        try ProviderSharingConsent.vault.withdraw(.local)
+        try ProviderSharingConsent.vault.approve(ProviderSharingConsent.configuration(.local), owner: ProviderSharingConsent.owner())
+        do { _ = try ProviderQualificationStore.complete(attemptID: challenge.attemptID, provider: .local, response: response); throw InjectedFailure.write } catch is SandboxError {}
     }
 
     @MainActor
@@ -793,6 +859,7 @@ enum ProviderQualificationLedgerContracts {
 
         try testSigningKeyTransactions()
         try testExternalQualificationAuthorization()
+        try testActualCompleteRetryAfterMeasuredAdapterFailure()
         try testCompletionTransactions(now: now)
         try await testAppleProbePersistenceFailuresPropagate()
         try testResetTransactions()
