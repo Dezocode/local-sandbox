@@ -1,0 +1,5 @@
+PHASE=r2-fix-after-fail-closed-init
+INNER=/usr/bin/env DEVELOPER_DIR=/Applications/Xcode-27-RC.app/Contents/Developer COPYFILE_DISABLE=1 swift test --jobs 1 -Xswiftc -j -Xswiftc 1 --build-path /tmp/IntercomDomain-swift-build
+NOTE=full suite after minimal init fail-closed fix; no acceptance claim
+WRAPPER_EXIT=0
+UTC_END=2026-09-30T22:22:14Z

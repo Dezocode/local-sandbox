@@ -1,0 +1,5 @@
+Build lease acquired: cursor-intercom-tests
+error: Unknown option '-j1'. Did you mean '--vv'?
+   or: Missing value for '-j <jobs>' in '-j1'
+Usage: swift test <options> <subcommand>
+  See 'test -help' for more information.

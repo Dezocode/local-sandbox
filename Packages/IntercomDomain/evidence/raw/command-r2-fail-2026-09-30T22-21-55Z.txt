@@ -1,0 +1,6 @@
+PHASE=r2-failing-regression-capture
+INNER=swift test --jobs 1 -Xswiftc -j -Xswiftc 1 --build-path /tmp/IntercomDomain-swift-build
+FILTER=IntercomDomainTests/test30_InitDemotionUnpublishedUnknownMustNotReturnReady
+NOTE=expect FAIL under r2 swallow-READY behavior before fix
+WRAPPER_EXIT=1
+UTC_END=2026-09-30T22:22:00Z

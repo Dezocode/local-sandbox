@@ -1,0 +1,21 @@
+Build lease acquired: cursor-intercom-tests
+Building for debugging...
+[1 / 8]
+[2 / 6] IntercomDomainTests-product
+[4 / 8] IntercomDomainTests-product
+[6 / 13] IntercomDomainTests-product
+Build complete! (2.86 sec)
+Test Suite 'Selected tests' started at 2026-09-30 17:22:00.115.
+Test Suite 'IntercomDomainTests.xctest' started at 2026-09-30 17:22:00.116.
+Test Suite 'IntercomDomainTests' started at 2026-09-30 17:22:00.116.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test30_InitDemotionUnpublishedUnknownMustNotReturnReady]' started.
+/Users/dezmondhollins/Documents/Codex/2026-09-30/task-2/LocalSandbox-Build8-Intercom/Packages/IntercomDomain/Tests/IntercomDomainTests/IntercomDomainTests.swift:1026: error: -[IntercomDomainTests.IntercomDomainTests test30_InitDemotionUnpublishedUnknownMustNotReturnReady] : failed - init must fail closed; must not return a READY instance on unpublished committedUnknown
+Test Case '-[IntercomDomainTests.IntercomDomainTests test30_InitDemotionUnpublishedUnknownMustNotReturnReady]' failed (0.097 seconds).
+Test Suite 'IntercomDomainTests' failed at 2026-09-30 17:22:00.214.
+	 Executed 1 test, with 1 failure (0 unexpected) in 0.097 (0.098) seconds
+Test Suite 'IntercomDomainTests.xctest' failed at 2026-09-30 17:22:00.214.
+	 Executed 1 test, with 1 failure (0 unexpected) in 0.097 (0.098) seconds
+Test Suite 'Selected tests' failed at 2026-09-30 17:22:00.214.
+	 Executed 1 test, with 1 failure (0 unexpected) in 0.097 (0.099) seconds
+Note: Some test targets reported failures:
+  - IntercomDomainTests (XCTest)

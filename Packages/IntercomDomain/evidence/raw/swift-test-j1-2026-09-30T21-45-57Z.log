@@ -1,0 +1,49 @@
+UTC_START=2026-09-30T21:45:57Z
+PWD=/Users/dezmondhollins/Documents/Codex/2026-09-30/task-2/LocalSandbox-Build8-Intercom/Packages/IntercomDomain
+COMMAND=COPYFILE_DISABLE=1 DEVELOPER_DIR=/Applications/Xcode-27-RC.app/Contents/Developer swift test -j 1 --build-path /tmp/IntercomDomain-swift-build
+---- BEGIN STDOUT+STDERR ----
+Building for debugging...
+[1 / 5]
+Build complete! (0.31 sec)
+Test Suite 'All tests' started at 2026-09-30 16:45:59.683.
+Test Suite 'IntercomDomainTests.xctest' started at 2026-09-30 16:45:59.684.
+Test Suite 'IntercomDomainTests' started at 2026-09-30 16:45:59.684.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test01_DuplicateMessageReplayAcrossRestart]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test01_DuplicateMessageReplayAcrossRestart]' passed (0.026 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test02_ChangedIdempotencyPayloadRejected]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test02_ChangedIdempotencyPayloadRejected]' passed (0.013 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test03_OfflineReconnectGatesMutations]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test03_OfflineReconnectGatesMutations]' passed (0.007 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test04_CompetingClaimsAndStaleRevision]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test04_CompetingClaimsAndStaleRevision]' passed (0.008 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test05_WrongHandoffOwnerImmutableOfferAndTransitionAudits]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test05_WrongHandoffOwnerImmutableOfferAndTransitionAudits]' passed (0.018 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test06_ForbiddenEscalationAndDecodedPrincipalIsNotAuthentication]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test06_ForbiddenEscalationAndDecodedPrincipalIsNotAuthentication]' passed (0.008 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test07_HumanRootedGrantMismatchedScopeAndRevocation]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test07_HumanRootedGrantMismatchedScopeAndRevocation]' passed (0.021 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test08_CodableRestoreRejectsNonHumanApprovalUser]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test08_CodableRestoreRejectsNonHumanApprovalUser]' passed (0.008 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test09_CodableRestoreRejectsMessageAuditGoalMismatch]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test09_CodableRestoreRejectsMessageAuditGoalMismatch]' passed (0.014 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test10_DurableCASStaleWriterAcrossReopen]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test10_DurableCASStaleWriterAcrossReopen]' passed (0.014 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test11_WriteFailureRollback]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test11_WriteFailureRollback]' passed (0.008 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test12_SchemaAndTamperRejection]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test12_SchemaAndTamperRejection]' passed (0.000 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test13_EngineInitValidatesEmptyScopesOnUnavailablePersistence]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test13_EngineInitValidatesEmptyScopesOnUnavailablePersistence]' passed (0.001 seconds).
+Test Suite 'IntercomDomainTests' passed at 2026-09-30 16:45:59.830.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.144 (0.146) seconds
+Test Suite 'IntercomDomainTests.xctest' passed at 2026-09-30 16:45:59.830.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.144 (0.146) seconds
+Test Suite 'All tests' passed at 2026-09-30 16:45:59.830.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.144 (0.147) seconds
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+---- END STDOUT+STDERR ----
+UTC_END=2026-09-30T21:45:59Z
+EXIT_CODE=0

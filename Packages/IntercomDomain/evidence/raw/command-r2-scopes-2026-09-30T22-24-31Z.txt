@@ -1,0 +1,5 @@
+PHASE=r2-handoff-grant-scope-invariants
+INNER=swift test --jobs 1 -Xswiftc -j -Xswiftc 1 --build-path /tmp/IntercomDomain-swift-build
+NOTE=restore fromGrant.handoff + toGrant.claimTask + claim.claimTask; no acceptance claim
+WRAPPER_EXIT=0
+UTC_END=2026-09-30T22:24:38Z
