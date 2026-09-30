@@ -1,0 +1,84 @@
+Build lease acquired: cursor-intercom-tests
+Building for debugging...
+[Pre-planning 92 / 124]
+[Planning deferred tasks]
+[2 / 6] IntercomDomain
+[3 / 7] IntercomDomain
+[8 / 11] IntercomDomainTests-product
+[10 / 11] IntercomDomainTests-product
+[11 / 18] IntercomDomainTests-product
+[16 / 20] IntercomDomainContracts-product
+[18 / 21] IntercomDomainContracts-product
+[19 / 21] IntercomDomainContracts-product
+Build complete! (2.16 sec)
+Test Suite 'All tests' started at 2026-09-30 17:14:37.523.
+Test Suite 'IntercomDomainTests.xctest' started at 2026-09-30 17:14:37.524.
+Test Suite 'IntercomDomainTests' started at 2026-09-30 17:14:37.524.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test01_DuplicateMessageReplayAcrossRestart]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test01_DuplicateMessageReplayAcrossRestart]' passed (0.027 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test02_ChangedIdempotencyPayloadRejected]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test02_ChangedIdempotencyPayloadRejected]' passed (0.014 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test03_OfflineReconnectGatesMutations]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test03_OfflineReconnectGatesMutations]' passed (0.006 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test04_CompetingClaimsAndStaleRevision]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test04_CompetingClaimsAndStaleRevision]' passed (0.009 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test05_WrongHandoffOwnerImmutableOfferAndTransitionAudits]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test05_WrongHandoffOwnerImmutableOfferAndTransitionAudits]' passed (0.018 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test06_ForbiddenEscalationAndDecodedPrincipalIsNotAuthentication]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test06_ForbiddenEscalationAndDecodedPrincipalIsNotAuthentication]' passed (0.008 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test07_HumanRootedGrantMismatchedScopeAndRevocation]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test07_HumanRootedGrantMismatchedScopeAndRevocation]' passed (0.022 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test08_CodableRestoreRejectsNonHumanApprovalUser]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test08_CodableRestoreRejectsNonHumanApprovalUser]' passed (0.008 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test09_CodableRestoreRejectsMessageAuditGoalMismatch]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test09_CodableRestoreRejectsMessageAuditGoalMismatch]' passed (0.014 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test10_DurableCASStaleWriterAcrossReopen]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test10_DurableCASStaleWriterAcrossReopen]' passed (0.016 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test11_WriteFailureRollback]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test11_WriteFailureRollback]' passed (0.008 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test12_SchemaAndTamperRejection]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test12_SchemaAndTamperRejection]' passed (0.000 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test13_EngineInitValidatesEmptyScopesOnUnavailablePersistence]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test13_EngineInitValidatesEmptyScopesOnUnavailablePersistence]' passed (0.001 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test14_IdempotencyBijectionRejectsDuplicatedFirstRecordAsSecond]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test14_IdempotencyBijectionRejectsDuplicatedFirstRecordAsSecond]' passed (0.024 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test15_EmptyBodyWithUpdatedCanonicalPayloadRejected]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test15_EmptyBodyWithUpdatedCanonicalPayloadRejected]' passed (0.014 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test16_HandoffTaskRevisionZeroRejected]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test16_HandoffTaskRevisionZeroRejected]' passed (0.000 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test17_ForgedHighOfferTaskRevisionRejected]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test17_ForgedHighOfferTaskRevisionRejected]' passed (0.013 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test18_CompleteWithoutAckRejected]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test18_CompleteWithoutAckRejected]' passed (0.013 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test19_NonexistentToGrantIDRejected]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test19_NonexistentToGrantIDRejected]' passed (0.014 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test20_AfterCompleteRevertOwnerToARejected]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test20_AfterCompleteRevertOwnerToARejected]' passed (0.020 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test21_CrossHopOwnerChainAndOutOfOrderChronology]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test21_CrossHopOwnerChainAndOutOfOrderChronology]' passed (0.034 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test22_RevokedOpenHistoryValidControlPreserved]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test22_RevokedOpenHistoryValidControlPreserved]' passed (0.019 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test23_AtomicPrewriteAndPrepublishAreNotCommitted]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test23_AtomicPrewriteAndPrepublishAreNotCommitted]' passed (0.007 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test24_PostpublishReconcilesMemoryWithDiskThenSurfacesCommittedUnknown]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test24_PostpublishReconcilesMemoryWithDiskThenSurfacesCommittedUnknown]' passed (0.006 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test25_AttemptedPublishUnverifiedLoadIsCommittedUnknown]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test25_AttemptedPublishUnverifiedLoadIsCommittedUnknown]' passed (0.005 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test26_AttemptedPublishWithProvenUnchangedBaseIsNotCommitted]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test26_AttemptedPublishWithProvenUnchangedBaseIsNotCommitted]' passed (0.005 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test27_BlockedRetryWhenReconcileLoadFails]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test27_BlockedRetryWhenReconcileLoadFails]' passed (0.005 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test28_ReadbackFaultIsCommittedUnknownWithMemoryDiskAgree]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test28_ReadbackFaultIsCommittedUnknownWithMemoryDiskAgree]' passed (0.006 seconds).
+Test Case '-[IntercomDomainTests.IntercomDomainTests test29_InitDemotionCommittedUnknownReconcilesToOffline]' started.
+Test Case '-[IntercomDomainTests.IntercomDomainTests test29_InitDemotionCommittedUnknownReconcilesToOffline]' passed (0.013 seconds).
+Test Suite 'IntercomDomainTests' passed at 2026-09-30 17:14:37.881.
+	 Executed 29 tests, with 0 failures (0 unexpected) in 0.353 (0.357) seconds
+Test Suite 'IntercomDomainTests.xctest' passed at 2026-09-30 17:14:37.881.
+	 Executed 29 tests, with 0 failures (0 unexpected) in 0.353 (0.357) seconds
+Test Suite 'All tests' passed at 2026-09-30 17:14:37.881.
+	 Executed 29 tests, with 0 failures (0 unexpected) in 0.353 (0.358) seconds
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

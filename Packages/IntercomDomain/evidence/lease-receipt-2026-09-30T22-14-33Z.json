@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "label": "cursor-intercom-tests",
+  "queuedAt": "2026-09-30T22:14:33.809258+00:00",
+  "lockPath": "/Users/dezmondhollins/Documents/Codex/2026-09-30/build-coordination/compute.lock",
+  "startedAt": "2026-09-30T22:14:33.809728+00:00",
+  "endedAt": "2026-09-30T22:14:37.940012+00:00",
+  "exitCode": 0,
+  "waitSeconds": 0.000471291015855968,
+  "executionSeconds": 4.130309167027008,
+  "status": "FINISHED",
+  "argumentsRecorded": false,
+  "interruptionRequested": false
+}
