@@ -4,7 +4,7 @@ Foundation-only, platform-neutral Swift package for shared native iOS/macOS Inte
 
 This package is **not** a live agent bus, provider client, UI, or credential store. It does not open network sessions and does not fabricate live dot, Muse, or provider connections.
 
-Canonical task IDs (report only; workbook owned by main): **B8INTERCOM01**, **B8INTERCOM02**, **B8INTERCOM03**. Bounded recovery: **B8-INTERCOM-RECOVERY**.
+Canonical task IDs (report only; workbook owned by main): **B8INTERCOM01**, **B8INTERCOM02**, **B8INTERCOM03**. Bounded recovery task: **B8-INTERCOM-RECOVERY**.
 
 ## Ownership
 
@@ -12,11 +12,7 @@ Canonical task IDs (report only; workbook owned by main): **B8INTERCOM01**, **B8
 |---|---|
 | `Packages/IntercomDomain/` sources + package tests | Cursor Intercom worker (this package) |
 | Native SandboxStore adapter, app/project wiring, workbooks, canonical Local Sandbox | Main implementation worker |
-| Push / PR / deploy / publication / credentials | Out of scope for this package |
-
-## Dependency policy
-
-Platform / standard-library (Foundation) only unless a documented real deficiency needs vetted reuse. No convenience packages, no hand-rolled crypto to evade review, no new installs approved. Dependency proposals (MIT-only research when needed) must state purpose, license, provenance, maintenance/security cost, and native alternative. **B8-INTERCOM-RECOVERY introduces no dependency.**
+| Push / PR / deploy / publication / credentials | Cloud-agent git/PR workflow only when authorized |
 
 ## Trust boundary (critical)
 
@@ -28,25 +24,26 @@ Platform / standard-library (Foundation) only unless a documented real deficienc
 
 Types: `AgentIdentity`, `GoalRecord`, `TaskClaim`, `AttributedMessage`, `HandoffReceipt`, `ConnectionState`, `NativeAdapterAuthority`, `UserApprovalReference`, `StoredGrant`, `AuditReceipt`, `IntercomSnapshot`, `IntercomError` (includes `notCommitted` / `committedUnknown`).
 
-Engine: privileged ops take `authority: NativeAdapterAuthority`. Agent ops: `claimTask`, `appendMessage`, `offerHandoff`, `acknowledgeHandoff`, `completeHandoff`, `cancelHandoff`. After `committedUnknown`, call `reconcileFromPersistence()` before retry.
+Engine: privileged ops take `authority: NativeAdapterAuthority`. Agent ops: `claimTask`, `appendMessage`, `offerHandoff`, `acknowledgeHandoff`, `completeHandoff`, `cancelHandoff(receiptID, expectedRevision, actor)`. After `committedUnknown`, call `reconcileFromPersistence()` before retry.
 
-**Handoff attempts:** offer `receiptID` is the unique attempt id (never reused). `claim.handoffHops` counts **completed** transfers only. `cancelHandoff` (owner) or grant `revokeGrant` (same transaction) append durable cancel evidence for uncompleted attempts without transferring ownership or reviving grants; a later offer may target the same hop slot while retaining history.
+**Handoff attempt vs completed hop:** offer `receiptID` is the unique attempt id. `claim.handoffHops` increments only on complete. Cancel closes an uncompleted attempt without ownership transfer; a later offer may reuse the same hop slot under a new attempt id. `revokeGrant` writes same-txn cancel evidence for affected open offers, then revokes — never transfers ownership or revives authorization.
 
 Persistence: durable `commit(_:expectedBaseRevision:)` CAS; `AtomicFileSnapshotStore` uses flock + atomic replace. `notCommitted` only when the durable base is **proven unchanged**; unknown/unreadable disk after attempted publish is `committedUnknown` (no fake rollback).
 
-## Status
+## Status (narrow; no acceptance claim)
 
-R3 accepted as narrow trusted-HOST journal only (immutable review zip SHA `3ee0c1ae…`). R4 is recovery source/evidence — **FULL PACKAGE acceptance still pending.** See `HANDOFF.md`.
+R3 trusted-HOST journal review zip preserved (`3ee0c1ae…`). B8-INTERCOM-RECOVERY adds cancel→re-offer for uncompleted attempts. **FULL PACKAGE acceptance still pending.** Not Build8-ready; not native auth; not remote transport. See `HANDOFF.md` for hashes, receipts, and unmet limitations.
 
 ## Documented gaps / unmet (not claimed)
 
 - Exact grantID + approvalRevision audit binding — pending (schema-v1)
-- Host namespace / task scope; old-claim reclaim still needs a fresh active scoped grant after owner-grant revoke
+- Host namespace / task scope; old-claim regrant/reclaim after owner-grant revoke still needs a fresh active scoped grant
 - Concurrent cross-process flock stress tests
 - Power-loss durability without fsync/crash proof
 - Native SandboxStore mint of `NativeAdapterAuthority` after real user auth
 - Single-core proof (package `--jobs 1` ≠ compiler `-j 1` ≠ single core)
 - Narrow trusted-HOST journal acceptance may follow independent review only; native authentication / remote transport remain outside / unproven
+- Recovery unit is bounded cancel→reassign only — **not** revocation-recovery-complete beyond that path; **no** acceptance claim
 
 ## Build / test (lease only)
 
