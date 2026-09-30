@@ -10,7 +10,7 @@ B8INTERCOM01 · B8INTERCOM02 · B8INTERCOM03 (workbook rows owned by main; this 
 - **Package owner:** Cursor Intercom worker (`Packages/IntercomDomain/` exclusive)
 - **Admitted task (UI):** 2026-09-30T20:42Z
 - **First artifacts:** Package/Models **20:53:11Z**; Persistence/Engine **20:54:54Z**
-- **Skill:** `build8-intercom` (project-local) — recovery guards recorded
+- **Skill:** `build8-intercom` (project-local) — recovery guards + **dependency restraint** (Foundation/stdlib only; no new install)
 - **R3 (preserve; never overwrite):** review zip SHA-256 `3ee0c1ae15ecae6410bfac17639782e6eebd3709f25e9c2d9e329547ff4e0e47`
 - **R4 recovery milestone (implementation + leased XCTest):** cancel uncompleted handoff attempt + re-offer to already-authorized agent; **45 XCTest / 0 failures**
 - **FULL PACKAGE acceptance:** **PENDING** (not claimed)

@@ -14,6 +14,10 @@ Canonical task IDs (report only; workbook owned by main): **B8INTERCOM01**, **B8
 | Native SandboxStore adapter, app/project wiring, workbooks, canonical Local Sandbox | Main implementation worker |
 | Push / PR / deploy / publication / credentials | Cloud-agent git/PR workflow only when authorized |
 
+## Dependency policy
+
+Platform / standard-library (Foundation) only unless a documented real deficiency needs vetted reuse. No convenience packages, no hand-rolled crypto to evade review, no new installs approved. Dependency proposals (MIT-only research when needed) must state purpose, license, provenance, maintenance/security cost, and native alternative. **B8-INTERCOM-RECOVERY introduces no dependency.**
+
 ## Trust boundary (critical)
 
 - `Principal` is a **Codable audit label**, not authentication. Decoded `role: nativeAdapter` JSON **cannot** call privileged APIs.

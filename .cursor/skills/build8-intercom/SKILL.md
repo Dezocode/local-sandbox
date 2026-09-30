@@ -11,6 +11,10 @@ From dot, coordinating the user's existing Cursor worker. Continue the existing 
 
 Read [allocation](../../../CURSOR_TASK.md) and [package handoff](../../../Packages/IntercomDomain/HANDOFF.md). Own only `Packages/IntercomDomain/` in this isolated checkout. Before each edit, establish one writer per file; coordinate reassignment through dot. Canonical `/Users/dezmondhollins/Local-Sandbox` and all app/project/workbook files remain main-owned. This project-local skill was installed by dot; do not change global skills/settings.
 
+## Dependency restraint (dot owner)
+
+IntercomDomain stays **platform / standard-library (Foundation) based** unless a documented real deficiency requires vetted reuse. Research MIT-licensed alternatives **only when needed**. Every dependency proposal must state purpose, license, provenance, maintenance/security cost, and the native/stdlib alternative. No package or install for convenience; no hand-rolled crypto to evade review; **no new install approved**. Current B8-INTERCOM-RECOVERY needs **no** dependency — continue scoped package code/tests/evidence only.
+
 ## Domain acceptance
 
 Preserve Codable/Sendable AgentIdentity, GoalRecord, TaskClaim, AttributedMessage, HandoffReceipt, ConnectionState and transactional claimTask(expectedRevision), appendMessage(idempotencyKey), acknowledge/completeHandoff(expectedOwner), revokeGrant, and cancelHandoff(receiptID, expectedRevision, actor). Every message binds goalID, taskID, sender, recipient, receiptID, time and evidence. No provider/network/UI implementation or fabricated live connection.
