@@ -1296,7 +1296,8 @@ final class IntercomDomainTests: XCTestCase {
             XCTAssertEqual(expected, 0)
             XCTAssertEqual(actual, control.claims[0].revision)
         }
-        XCTAssertEqual(await engine.currentSnapshot(), control)
+        let afterStale = await engine.currentSnapshot()
+        XCTAssertEqual(afterStale, control)
         XCTAssertEqual(try store.load(), control)
     }
 
