@@ -34,7 +34,6 @@ final class IntercomDomainTests: XCTestCase {
     private func agentA() throws -> AgentIdentity { try .agent("agent-a") }
     private func agentB() throws -> AgentIdentity { try .agent("agent-b") }
     private func agentC() throws -> AgentIdentity { try .agent("agent-c") }
-    private func agentC() throws -> AgentIdentity { try .agent("agent-c") }
 
     private func recordGrantC(on engine: IntercomDomainEngine) async throws {
         let auth = try authority()
@@ -1145,9 +1144,16 @@ final class IntercomDomainTests: XCTestCase {
         _ = try await engine.revokeGrant(grantID: "grant-a", expectedRevision: 1, authority: try authority())
         let snap = await engine.currentSnapshot()
         XCTAssertEqual(try snap.derivedHandoffState(for: offer.receiptID), .revoked)
+        XCTAssertEqual(snap.claims[0].handoffHops, 0)
+        XCTAssertEqual(snap.claims[0].status, .claimed)
+        XCTAssertNil(snap.claims[0].openHandoffReceiptID)
+        XCTAssertEqual(snap.claims[0].owner, a)
+        XCTAssertTrue(snap.audits.contains {
+            $0.action == .cancelHandoff && $0.subjectReceiptID == offer.receiptID
+        })
         XCTAssertNoThrow(try snap.validate())
         XCTAssertEqual(try store.load(), snap)
-        // Revoke now emits durable cancel evidence in the same transaction (B8-INTERCOM-RECOVERY).
+        // Revoke emits durable cancel evidence in the same transaction (B8-INTERCOM-RECOVERY).
         // Re-offer after revoke of a *recipient* grant is covered by recovery tests; revoking the
         // owner grant still refuses new offers until a fresh active scoped grant exists.
     }
@@ -1331,7 +1337,8 @@ final class IntercomDomainTests: XCTestCase {
         )
         XCTAssertEqual(offerAC.hop, 1)
         XCTAssertNotEqual(offerAC.receiptID, offerAB.receiptID)
-        XCTAssertNoThrow(try (await restarted.currentSnapshot()).validate())
+        let afterRestartOffer = await restarted.currentSnapshot()
+        XCTAssertNoThrow(try afterRestartOffer.validate())
     }
 
     func test40_CompletedHandoffCancelDenied() async throws {
@@ -1359,7 +1366,8 @@ final class IntercomDomainTests: XCTestCase {
         } catch IntercomError.handoffNotReady(let receiptID) {
             XCTAssertEqual(receiptID, offer.receiptID)
         }
-        XCTAssertEqual(await engine.currentSnapshot(), control)
+        let afterDenied = await engine.currentSnapshot()
+        XCTAssertEqual(afterDenied, control)
         XCTAssertEqual(try store.load(), control)
     }
 
@@ -1408,7 +1416,8 @@ final class IntercomDomainTests: XCTestCase {
         )
         XCTAssertEqual(offerAC.hop, 1)
         XCTAssertNotEqual(offerAC.receiptID, offerAB.receiptID)
-        XCTAssertEqual(try store.load(), await engine.currentSnapshot())
+        let finalSnap = await engine.currentSnapshot()
+        XCTAssertEqual(try store.load(), finalSnap)
     }
 
     func test42_ForgedCrossGoalCancelRejectedOnRestore() async throws {
@@ -1570,7 +1579,8 @@ final class IntercomDomainTests: XCTestCase {
         } catch IntercomError.grantRevoked(let grantID) {
             XCTAssertEqual(grantID, "grant-a")
         }
-        XCTAssertEqual(await engine.currentSnapshot(), afterRevoke)
+        let afterRefuse = await engine.currentSnapshot()
+        XCTAssertEqual(afterRefuse, afterRevoke)
         XCTAssertEqual(try store.load(), afterRevoke)
     }
 }
